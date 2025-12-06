@@ -1,0 +1,6 @@
+"FirstName","LastName","Email","CreatedDate","Phone","CustomerID","City","Country"
+"John","Doe","john.doe@email.com","12/03/2025 11:37:26","+32-123-456-789","1","Brussels","Belgium"
+"Jane","Smith","jane.smith@email.com","12/03/2025 11:37:26","+32-987-654-321","2","Antwerp","Belgium"
+"Bob","Johnson","bob.j@email.com","12/03/2025 11:37:26","+32-555-123-456","3","Ghent","Belgium"
+"Alice","Williams","alice.w@email.com","12/03/2025 11:37:26","+32-444-789-012","4","Bruges","Belgium"
+"Charlie","Brown","charlie.b@email.com","12/03/2025 11:37:26","+32-333-456-789","5","Leuven","Belgium"

@@ -1,0 +1,10 @@
+{
+    "SqlServer": {
+        "ServerInstance": "localhost\\SQLEXPRESS",
+        "TrustServerCertificate": true,
+        "ConnectionTimeout": 30
+    },
+    "SQLite": {
+        "DefaultPath": "./data/sqlite.db"
+    }
+}
