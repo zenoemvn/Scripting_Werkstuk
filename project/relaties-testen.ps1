@@ -1,5 +1,11 @@
-$ServerInstance = "localhost\SQLEXPRESS"
-$Database = "SalesDB"
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$ServerInstance,
+    
+    [Parameter(Mandatory=$true)]
+    [string]$Database
+)
 
 Write-Host "╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "║      Database Integrity Tests                  ║" -ForegroundColor Cyan

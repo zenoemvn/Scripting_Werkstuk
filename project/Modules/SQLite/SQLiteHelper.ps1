@@ -1,28 +1,8 @@
 # Import PSSQLite module
 Import-Module PSSQLite -ErrorAction Stop
 
-function Invoke-SQLiteQuery {
-    <#
-    .SYNOPSIS
-    Executes a query on SQLite database using PSSQLite
-    #>
-    param(
-        [Parameter(Mandatory)]
-        [string]$DataSource,
-        
-        [Parameter(Mandatory)]
-        [string]$Query
-    )
-    
-    try {
-        $result = Invoke-SqliteQuery -DataSource $DataSource -Query $Query
-        return $result
-    }
-    catch {
-        Write-Error "SQLite query failed: $_"
-        throw
-    }
-}
+# Verwijder je eigen wrapper, gebruik direct PSSQLite
+# Je hebt geen eigen Invoke-SQLiteQuery nodig!
 
 function ConvertTo-SQLiteDataType {
     <#
@@ -81,6 +61,8 @@ function Get-SQLiteTables {
     )
     
     $query = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+    
+    # Gebruik direct PSSQLite's Invoke-SqliteQuery (met kleine 's')
     $result = Invoke-SqliteQuery -DataSource $DataSource -Query $query
     
     if ($result) {

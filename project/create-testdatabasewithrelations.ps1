@@ -1,7 +1,13 @@
-Write-Host "=== Creating Test Database with Relations ===" -ForegroundColor Cyan
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$ServerInstance,
+    
+    [Parameter(Mandatory=$true)]
+    [string]$DatabaseName
+)
 
-$ServerInstance = "localhost\SQLEXPRESS"
-$DatabaseName = "SalesDB"
+Write-Host "=== Creating Test Database with Relations ===" -ForegroundColor Cyan
 
 # Drop + Create database
 Write-Host "Setting up database..." -ForegroundColor Yellow
@@ -25,50 +31,56 @@ Invoke-Sqlcmd -ServerInstance $ServerInstance `
     -Query @"
 -- Customers tabel (parent)
 CREATE TABLE Customers (
-    CustomerID INT PRIMARY KEY IDENTITY(1,1),
+    CustomerID INT IDENTITY(1,1),
     FirstName NVARCHAR(50) NOT NULL,
     LastName NVARCHAR(50) NOT NULL,
-    Email NVARCHAR(100) UNIQUE,
+    Email NVARCHAR(100),
     Phone NVARCHAR(20),
     City NVARCHAR(50),
     Country NVARCHAR(50),
-    CreatedDate DATETIME DEFAULT GETDATE()
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    
+    CONSTRAINT PK_Customers PRIMARY KEY (CustomerID),
+    CONSTRAINT UQ_Customers_Email UNIQUE (Email)
 );
 
 -- Products tabel (parent)
 CREATE TABLE Products (
-    ProductID INT PRIMARY KEY IDENTITY(1,1),
+    ProductID INT IDENTITY(1,1),
     ProductName NVARCHAR(100) NOT NULL,
     Category NVARCHAR(50),
     Price DECIMAL(10,2) NOT NULL,
     Stock INT DEFAULT 0,
-    CreatedDate DATETIME DEFAULT GETDATE()
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    
+    CONSTRAINT PK_Products PRIMARY KEY (ProductID)
 );
 
 -- Orders tabel (child van Customers)
 CREATE TABLE Orders (
-    OrderID INT PRIMARY KEY IDENTITY(1,1),
+    OrderID INT IDENTITY(1,1),
     CustomerID INT NOT NULL,
     OrderDate DATETIME DEFAULT GETDATE(),
-    Status NVARCHAR(20) CHECK (Status IN ('Pending','Processing','Shipped','Delivered','Cancelled')),
+    Status NVARCHAR(20),
     TotalAmount DECIMAL(10,2),
     ShippingAddress NVARCHAR(200),
     
-    -- Foreign Key
+    CONSTRAINT PK_Orders PRIMARY KEY (OrderID),
+    CONSTRAINT CHK_Orders_Status CHECK (Status IN ('Pending','Processing','Shipped','Delivered','Cancelled')),
     CONSTRAINT FK_Orders_Customers FOREIGN KEY (CustomerID) 
         REFERENCES Customers(CustomerID)
 );
 
 -- OrderDetails tabel (child van Orders en Products)
 CREATE TABLE OrderDetails (
-    OrderDetailID INT PRIMARY KEY IDENTITY(1,1),
+    OrderDetailID INT IDENTITY(1,1),
     OrderID INT NOT NULL,
     ProductID INT NOT NULL,
     Quantity INT NOT NULL,
     UnitPrice DECIMAL(10,2) NOT NULL,
     Discount DECIMAL(5,2) DEFAULT 0,
     
-    -- Foreign Keys
+    CONSTRAINT PK_OrderDetails PRIMARY KEY (OrderDetailID),
     CONSTRAINT FK_OrderDetails_Orders FOREIGN KEY (OrderID) 
         REFERENCES Orders(OrderID),
     CONSTRAINT FK_OrderDetails_Products FOREIGN KEY (ProductID) 
@@ -77,14 +89,15 @@ CREATE TABLE OrderDetails (
 
 -- Reviews tabel (child van Products en Customers)
 CREATE TABLE Reviews (
-    ReviewID INT PRIMARY KEY IDENTITY(1,1),
+    ReviewID INT IDENTITY(1,1),
     ProductID INT NOT NULL,
     CustomerID INT NOT NULL,
-    Rating INT CHECK (Rating BETWEEN 1 AND 5),
+    Rating INT,
     Comment NVARCHAR(500),
     ReviewDate DATETIME DEFAULT GETDATE(),
     
-    -- Foreign Keys
+    CONSTRAINT PK_Reviews PRIMARY KEY (ReviewID),
+    CONSTRAINT CHK_Reviews_Rating CHECK (Rating BETWEEN 1 AND 5),
     CONSTRAINT FK_Reviews_Products FOREIGN KEY (ProductID) 
         REFERENCES Products(ProductID),
     CONSTRAINT FK_Reviews_Customers FOREIGN KEY (CustomerID) 
@@ -165,7 +178,7 @@ $summary = Invoke-Sqlcmd -ServerInstance $ServerInstance `
     -Database $DatabaseName `
     -TrustServerCertificate `
     -Query @"
-SELECT 'Customers' as TableName, COUNT(*) as RowCount FROM Customers
+SELECT 'Customers' as TableName, COUNT(*) as [RowCount] FROM Customers
 UNION ALL
 SELECT 'Products', COUNT(*) FROM Products
 UNION ALL

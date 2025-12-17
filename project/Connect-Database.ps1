@@ -1,8 +1,11 @@
 function Get-DbConnection {
     [CmdletBinding()]
     param(
-        [string]$ServerInstance = "localhost\SQLEXPRESS",
-        [string]$Database = "master"
+        [Parameter(Mandatory=$true)]
+        [string]$ServerInstance,
+        
+        [Parameter(Mandatory=$true)]
+        [string]$Database
     )
     
     return @{

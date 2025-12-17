@@ -1,0 +1,7 @@
+"OrderID","CustomerID","OrderDate","Status","TotalAmount","ShippingAddress"
+"1","1","16/12/2025 16:31:31","Delivered","1329,98","Rue de la Loi 123, Brussels"
+"2","1","16/12/2025 16:31:31","Processing","349,99","Rue de la Loi 123, Brussels"
+"3","2","16/12/2025 16:31:31","Shipped","459,98","Meir 45, Antwerp"
+"4","3","16/12/2025 16:31:31","Delivered","89,97","Veldstraat 78, Ghent"
+"5","4","16/12/2025 16:31:31","Pending","1299,99","Markt 12, Bruges"
+"6","5","16/12/2025 16:31:31","Delivered","19,99","Bondgenotenlaan 90, Leuven"

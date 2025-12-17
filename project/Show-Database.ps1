@@ -1,6 +1,10 @@
+[CmdletBinding()]
 param(
-    [string]$ServerInstance = "localhost\SQLEXPRESS",
-    [string]$Database = "TestDB"
+    [Parameter(Mandatory=$true)]
+    [string]$ServerInstance,
+    
+    [Parameter(Mandatory=$true)]
+    [string]$Database
 )
 
 Write-Host "`n=== DATABASE OVERVIEW ===" -ForegroundColor Cyan

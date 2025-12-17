@@ -5,7 +5,7 @@ Write-Host "║      CSV to Database Import                    ║" -ForegroundC
 Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
 
 # Import module
-Import-Module ".\Modules\Migration\Import-DatabaseFromCsv.psm1" -Force
+Import-Module ".\Modules\DatabaseMigration.psm1" -Force
 
 $ServerInstance = "localhost\SQLEXPRESS"
 $TargetDB = "SalesDB"

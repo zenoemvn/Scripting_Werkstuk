@@ -1,0 +1,303 @@
+{
+  "ExportDate": "2025-12-17 12:23:57",
+  "DatabaseName": "SalesDB",
+  "Tables": {
+    "Customers": {
+      "ForeignKeys": [],
+      "Columns": [
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "int",
+          "Name": "CustomerID",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "DataType": "nvarchar",
+          "Name": "FirstName",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "DataType": "nvarchar",
+          "Name": "LastName",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": 100,
+          "DefaultValue": null,
+          "DataType": "nvarchar",
+          "Name": "Email",
+          "IsNullable": true
+        },
+        {
+          "MaxLength": 20,
+          "DefaultValue": null,
+          "DataType": "nvarchar",
+          "Name": "Phone",
+          "IsNullable": true
+        },
+        {
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "DataType": "nvarchar",
+          "Name": "City",
+          "IsNullable": true
+        },
+        {
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "DataType": "nvarchar",
+          "Name": "Country",
+          "IsNullable": true
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": "(getdate())",
+          "DataType": "datetime",
+          "Name": "CreatedDate",
+          "IsNullable": true
+        }
+      ],
+      "PrimaryKey": [
+        "CustomerID"
+      ]
+    },
+    "Reviews": {
+      "ForeignKeys": [
+        {
+          "ReferencedTable": "Customers",
+          "Column": "CustomerID",
+          "ReferencedColumn": "CustomerID",
+          "ConstraintName": "FK_Reviews_Customers"
+        },
+        {
+          "ReferencedTable": "Products",
+          "Column": "ProductID",
+          "ReferencedColumn": "ProductID",
+          "ConstraintName": "FK_Reviews_Products"
+        }
+      ],
+      "Columns": [
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "int",
+          "Name": "ReviewID",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "int",
+          "Name": "ProductID",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "int",
+          "Name": "CustomerID",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "int",
+          "Name": "Rating",
+          "IsNullable": true
+        },
+        {
+          "MaxLength": 500,
+          "DefaultValue": null,
+          "DataType": "nvarchar",
+          "Name": "Comment",
+          "IsNullable": true
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": "(getdate())",
+          "DataType": "datetime",
+          "Name": "ReviewDate",
+          "IsNullable": true
+        }
+      ],
+      "PrimaryKey": [
+        "ReviewID"
+      ]
+    },
+    "OrderDetails": {
+      "ForeignKeys": [
+        {
+          "ReferencedTable": "Products",
+          "Column": "ProductID",
+          "ReferencedColumn": "ProductID",
+          "ConstraintName": "FK_OrderDetails_Products"
+        },
+        {
+          "ReferencedTable": "Orders",
+          "Column": "OrderID",
+          "ReferencedColumn": "OrderID",
+          "ConstraintName": "FK_OrderDetails_Orders"
+        }
+      ],
+      "Columns": [
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "int",
+          "Name": "OrderDetailID",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "int",
+          "Name": "OrderID",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "int",
+          "Name": "ProductID",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "int",
+          "Name": "Quantity",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "decimal",
+          "Name": "UnitPrice",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": "((0))",
+          "DataType": "decimal",
+          "Name": "Discount",
+          "IsNullable": true
+        }
+      ],
+      "PrimaryKey": [
+        "OrderDetailID"
+      ]
+    },
+    "Orders": {
+      "ForeignKeys": [
+        {
+          "ReferencedTable": "Customers",
+          "Column": "CustomerID",
+          "ReferencedColumn": "CustomerID",
+          "ConstraintName": "FK_Orders_Customers"
+        }
+      ],
+      "Columns": [
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "int",
+          "Name": "OrderID",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "int",
+          "Name": "CustomerID",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": "(getdate())",
+          "DataType": "datetime",
+          "Name": "OrderDate",
+          "IsNullable": true
+        },
+        {
+          "MaxLength": 20,
+          "DefaultValue": null,
+          "DataType": "nvarchar",
+          "Name": "Status",
+          "IsNullable": true
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "decimal",
+          "Name": "TotalAmount",
+          "IsNullable": true
+        },
+        {
+          "MaxLength": 200,
+          "DefaultValue": null,
+          "DataType": "nvarchar",
+          "Name": "ShippingAddress",
+          "IsNullable": true
+        }
+      ],
+      "PrimaryKey": [
+        "OrderID"
+      ]
+    },
+    "Products": {
+      "ForeignKeys": [],
+      "Columns": [
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "int",
+          "Name": "ProductID",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": 100,
+          "DefaultValue": null,
+          "DataType": "nvarchar",
+          "Name": "ProductName",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "DataType": "nvarchar",
+          "Name": "Category",
+          "IsNullable": true
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": null,
+          "DataType": "decimal",
+          "Name": "Price",
+          "IsNullable": false
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": "((0))",
+          "DataType": "int",
+          "Name": "Stock",
+          "IsNullable": true
+        },
+        {
+          "MaxLength": null,
+          "DefaultValue": "(getdate())",
+          "DataType": "datetime",
+          "Name": "CreatedDate",
+          "IsNullable": true
+        }
+      ],
+      "PrimaryKey": [
+        "ProductID"
+      ]
+    }
+  }
+}

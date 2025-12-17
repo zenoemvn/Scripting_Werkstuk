@@ -1,0 +1,614 @@
+{
+  "ExportDate": "2025-12-17 12:58:02",
+  "Tables": {
+    "PostLinks": {
+      "ForeignKeys": [
+        {
+          "Column": "_PostId",
+          "ReferencedTable": "Posts",
+          "ConstraintName": "FK_PostLinks_Posts",
+          "ReferencedColumn": "_Id"
+        }
+      ],
+      "PrimaryKey": [
+        "_Id"
+      ],
+      "Columns": [
+        {
+          "DataType": "int",
+          "Name": "_PostId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_CreationDate",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_LinkTypeId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_RelatedPostId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_Id",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": false
+        }
+      ]
+    },
+    "Tags": {
+      "ForeignKeys": [],
+      "PrimaryKey": [
+        "_Id"
+      ],
+      "Columns": [
+        {
+          "DataType": "int",
+          "Name": "_WikiPostId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "bit",
+          "Name": "_IsRequired",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_TagName",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_Count",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_ExcerptPostId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_IsModeratorOnly",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_Id",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": false
+        }
+      ]
+    },
+    "Posts": {
+      "ForeignKeys": [],
+      "PrimaryKey": [
+        "_Id"
+      ],
+      "Columns": [
+        {
+          "DataType": "int",
+          "Name": "_CommentCount",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_CreationDate",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_LastActivityDate",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_Id",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": false
+        },
+        {
+          "DataType": "int",
+          "Name": "_Score",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_Tags",
+          "MaxLength": 83,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_Title",
+          "MaxLength": 153,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_Body",
+          "MaxLength": -1,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_AnswerCount",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_LastEditorUserId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_ViewCount",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_OwnerUserId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_OwnerDisplayName",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_CommunityOwnedDate",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_ContentLicense",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_AcceptedAnswerId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_ClosedDate",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_ParentId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_FavoriteCount",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_PostTypeId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_LastEditDate",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        }
+      ]
+    },
+    "PostHistory": {
+      "ForeignKeys": [
+        {
+          "Column": "_PostId",
+          "ReferencedTable": "Posts",
+          "ConstraintName": "FK_PostHistory_Posts",
+          "ReferencedColumn": "_Id"
+        },
+        {
+          "Column": "_UserId",
+          "ReferencedTable": "Users",
+          "ConstraintName": "FK_PostHistory_Users",
+          "ReferencedColumn": "_Id"
+        }
+      ],
+      "PrimaryKey": [
+        "_Id"
+      ],
+      "Columns": [
+        {
+          "DataType": "nvarchar",
+          "Name": "_ContentLicense",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_UserId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_PostId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_Comment",
+          "MaxLength": 207,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_CreationDate",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "uniqueidentifier",
+          "Name": "_RevisionGUID",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_Id",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": false
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_UserDisplayName",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_Text",
+          "MaxLength": -1,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_PostHistoryTypeId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        }
+      ]
+    },
+    "Users": {
+      "ForeignKeys": [],
+      "PrimaryKey": [
+        "_Id"
+      ],
+      "Columns": [
+        {
+          "DataType": "nvarchar",
+          "Name": "_LastAccessDate",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_Views",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_DownVotes",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_Id",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": false
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_CreationDate",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_Reputation",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_DisplayName",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_AboutMe",
+          "MaxLength": -1,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_Location",
+          "MaxLength": 117,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_WebsiteUrl",
+          "MaxLength": 140,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_UpVotes",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_AccountId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        }
+      ]
+    },
+    "Comments": {
+      "ForeignKeys": [
+        {
+          "Column": "_PostId",
+          "ReferencedTable": "Posts",
+          "ConstraintName": "FK_Comments_Posts",
+          "ReferencedColumn": "_Id"
+        },
+        {
+          "Column": "_UserId",
+          "ReferencedTable": "Users",
+          "ConstraintName": "FK_Comments_Users",
+          "ReferencedColumn": "_Id"
+        }
+      ],
+      "PrimaryKey": [
+        "_Id"
+      ],
+      "Columns": [
+        {
+          "DataType": "int",
+          "Name": "_Score",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_PostId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_CreationDate",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_UserId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_UserDisplayName",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_Text",
+          "MaxLength": 720,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_Id",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": false
+        }
+      ]
+    },
+    "Votes": {
+      "ForeignKeys": [],
+      "PrimaryKey": [
+        "_Id"
+      ],
+      "Columns": [
+        {
+          "DataType": "nvarchar",
+          "Name": "_CreationDate",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_VoteTypeId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_Id",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": false
+        },
+        {
+          "DataType": "int",
+          "Name": "_PostId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        }
+      ]
+    },
+    "Badges (1)": {
+      "ForeignKeys": [
+        {
+          "Column": "_UserId",
+          "ReferencedTable": "Users",
+          "ConstraintName": "FK_Badges__1__Users",
+          "ReferencedColumn": "_Id"
+        }
+      ],
+      "PrimaryKey": [
+        "_Id"
+      ],
+      "Columns": [
+        {
+          "DataType": "nvarchar",
+          "Name": "_Name",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_UserId",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_Class",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "nvarchar",
+          "Name": "_Date",
+          "MaxLength": 50,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "bit",
+          "Name": "_TagBased",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": true
+        },
+        {
+          "DataType": "int",
+          "Name": "_Id",
+          "MaxLength": null,
+          "DefaultValue": null,
+          "IsNullable": false
+        }
+      ]
+    }
+  },
+  "DatabaseName": "tester8"
+}

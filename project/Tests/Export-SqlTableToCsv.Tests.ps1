@@ -1,10 +1,33 @@
 BeforeAll {
-    # Import de functie
-    . "$PSScriptRoot\..\Modules\Migration\Export-SqlTableToCsv.ps1"
+    # Import de module
+    Import-Module "$PSScriptRoot\..\Modules\DatabaseMigration.psm1" -Force
     
     $script:ServerInstance = "localhost\SQLEXPRESS"
-    $script:Database = "TestDB"
+    $script:Database = "PesterTest_Export_$(Get-Random)"
     $script:TestOutputPath = "$PSScriptRoot\..\Output\Test_Export.csv"
+    
+    # Maak test database met data
+    Invoke-Sqlcmd -ServerInstance $script:ServerInstance -TrustServerCertificate -Query @"
+IF EXISTS (SELECT * FROM sys.databases WHERE name = '$($script:Database)')
+BEGIN
+    ALTER DATABASE [$($script:Database)] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [$($script:Database)];
+END
+CREATE DATABASE [$($script:Database)];
+"@
+    
+    Invoke-Sqlcmd -ServerInstance $script:ServerInstance -Database $script:Database -TrustServerCertificate -Query @"
+CREATE TABLE Users (
+    UserID INT PRIMARY KEY,
+    Username NVARCHAR(50),
+    Email NVARCHAR(100)
+);
+
+INSERT INTO Users (UserID, Username, Email) VALUES 
+    (1, 'alice', 'alice@test.com'),
+    (2, 'bob', 'bob@test.com'),
+    (3, 'charlie', 'charlie@test.com');
+"@
 }
 
 Describe "Export-SqlTableToCsv" {
@@ -42,6 +65,20 @@ Describe "Export-SqlTableToCsv" {
 AfterAll {
     # Cleanup
     if (Test-Path $script:TestOutputPath) {
-        Remove-Item $script:TestOutputPath
+        Remove-Item $script:TestOutputPath -ErrorAction SilentlyContinue
+    }
+    
+    # Drop test database
+    try {
+        Invoke-Sqlcmd -ServerInstance $script:ServerInstance -TrustServerCertificate -Query @"
+IF EXISTS (SELECT * FROM sys.databases WHERE name = '$($script:Database)')
+BEGIN
+    ALTER DATABASE [$($script:Database)] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [$($script:Database)];
+END
+"@
+    }
+    catch {
+        Write-Warning "Could not clean up test database: $_"
     }
 }

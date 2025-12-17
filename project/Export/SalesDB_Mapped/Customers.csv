@@ -1,6 +1,0 @@
-"First_Name","Last_Name","Email","City","Land","Cration","Customer_Id","GSM","RowError","RowState","Table","ItemArray","HasErrors"
-"John","Doe","john.doe@email.com","Brussels","Belgium","03/12/2025 11:37:26","1","+32-123-456-789","","Detached","","System.Object[]","False"
-"Jane","Smith","jane.smith@email.com","Antwerp","Belgium","03/12/2025 11:37:26","2","+32-987-654-321","","Detached","","System.Object[]","False"
-"Bob","Johnson","bob.j@email.com","Ghent","Belgium","03/12/2025 11:37:26","3","+32-555-123-456","","Detached","","System.Object[]","False"
-"Alice","Williams","alice.w@email.com","Bruges","Belgium","03/12/2025 11:37:26","4","+32-444-789-012","","Detached","","System.Object[]","False"
-"Charlie","Brown","charlie.b@email.com","Leuven","Belgium","03/12/2025 11:37:26","5","+32-333-456-789","","Detached","","System.Object[]","False"

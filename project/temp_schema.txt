@@ -1,0 +1,1 @@
+CREATE TABLE [Customers] ([CustomerID] INTEGER NOT NULL, [FirstName] TEXT NOT NULL, [LastName] TEXT NOT NULL, [Email] TEXT, [Phone] TEXT, [City] TEXT, [Country] TEXT, [CreatedDate] TEXT, PRIMARY KEY ([CustomerID]))
