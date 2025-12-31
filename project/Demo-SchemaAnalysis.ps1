@@ -24,11 +24,11 @@ Write-Host "========================================" -ForegroundColor Yellow
 Write-Host @"
 
 Export-DatabaseSchemaToCsv now includes:
-  ✓ Row counts per table
-  ✓ Table size (Total/Used/Unused KB)
-  ✓ Indexes (name, type, unique, columns)
-  ✓ CHECK constraints (with definitions)
-  ✓ UNIQUE constraints (separate from PKs)
+   Row counts per table
+   Table size (Total/Used/Unused KB)
+   Indexes (name, type, unique, columns)
+   CHECK constraints (with definitions)
+   UNIQUE constraints (separate from PKs)
 
 Example:
 "@
@@ -74,12 +74,12 @@ Write-Host @"
 
 New function: Export-DatabaseSchemaToMarkdown
 Creates human-readable documentation with:
-  ✓ Table of contents
-  ✓ Row counts and sizes
-  ✓ Column details in tables
-  ✓ Primary/Foreign keys
-  ✓ Indexes
-  ✓ Constraints (UNIQUE, CHECK)
+   Table of contents
+   Row counts and sizes
+   Column details in tables
+   Primary/Foreign keys
+   Indexes
+   Constraints (UNIQUE, CHECK)
 
 Example:
 "@
@@ -101,7 +101,7 @@ try {
         -TrustServerCertificate -ErrorAction Stop
     
     if ($dbCheck.id) {
-        Write-Host "`n✓ SalesDB database found!" -ForegroundColor Green
+        Write-Host "`n SalesDB database found!" -ForegroundColor Green
         
         # Export enhanced JSON metadata
         Write-Host "`n1. Exporting enhanced JSON metadata..." -ForegroundColor Cyan
@@ -116,18 +116,18 @@ try {
             -Database "SalesDB" `
             -OutputPath ".\SalesDB-Schema.md"
         
-        Write-Host "`n✓ Demo completed successfully!" -ForegroundColor Green
+        Write-Host "`n Demo completed successfully!" -ForegroundColor Green
         Write-Host "`nGenerated files:" -ForegroundColor Cyan
         Write-Host "  - .\Export\SalesDB_Enhanced\schema-metadata.json (JSON)" -ForegroundColor Gray
         Write-Host "  - .\SalesDB-Schema.md (Markdown)" -ForegroundColor Gray
         
         Write-Host "`nOpen the Markdown file to see the documentation!" -ForegroundColor Yellow
     } else {
-        Write-Host "`n⚠ SalesDB database not found. Run setup script first." -ForegroundColor Yellow
+        Write-Host "`n SalesDB database not found. Run setup script first." -ForegroundColor Yellow
     }
 }
 catch {
-    Write-Host "`n⚠ Could not connect to SQL Server" -ForegroundColor Yellow
+    Write-Host "`n Could not connect to SQL Server" -ForegroundColor Yellow
     Write-Host "Error: $_" -ForegroundColor Red
 }
 
@@ -167,10 +167,10 @@ Write-Host @"
    - Export-DatabaseSchemaToMarkdown function
    - Table of contents with links
    - Formatted tables for columns/indexes/constraints
-   - Human-readable with emojis (✓/✗)
+   - Human-readable with emojis (/ )
    - Summary section with totals
 
-All Pester tests still passing! ✓
+All Pester tests still passing! 
 
 "@ -ForegroundColor White
 

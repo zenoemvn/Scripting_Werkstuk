@@ -24,7 +24,7 @@ END
 CREATE DATABASE $TargetDB;
 "@
 
-Write-Host "  ✓ Database created" -ForegroundColor Green
+Write-Host "   Database created" -ForegroundColor Green
 
 # Definieer Primary Keys
 $primaryKeys = @{
@@ -80,6 +80,6 @@ $importResult = Import-DatabaseFromCsv `
     -Verbose
 
 Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Green
-Write-Host "║         ✓ IMPORT SUCCESSFUL!                   ║" -ForegroundColor Green
+Write-Host "║          IMPORT SUCCESSFUL!                   ║" -ForegroundColor Green
 Write-Host "║   Database created from CSV files              ║" -ForegroundColor Green
 Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Green

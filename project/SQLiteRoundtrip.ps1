@@ -35,7 +35,7 @@ $toSqlite = Convert-SqlServerToSQLite `
     -SQLitePath $SQLitePath
 
 if (-not $toSqlite.Success) {
-    Write-Host "✗ Phase 1 failed!" -ForegroundColor Red
+    Write-Host "  Phase 1 failed!" -ForegroundColor Red
     exit
 }
 
@@ -92,7 +92,7 @@ foreach ($table in $tables) {
         $match = ($sourceCount.cnt -eq $sqliteCount.cnt) -and ($sqliteCount.cnt -eq $targetCount.cnt)
         if (-not $match) { $allMatch = $false }
         
-        $status = if ($match) { "✓" } else { "✗" }
+        $status = if ($match) { "" } else { " " }
         $color = if ($match) { "Green" } else { "Red" }
         
         Write-Host ("{0,-20} {1,10} {2,10} {3,10}  {4}" -f $table, $sourceCount.cnt, $sqliteCount.cnt, $targetCount.cnt, $status) -ForegroundColor $color
@@ -106,7 +106,7 @@ foreach ($table in $tables) {
 Write-Host ""
 if ($allMatch) {
     Write-Host "╔════════════════════════════════════════════════╗" -ForegroundColor Green
-    Write-Host "║    ✓ ROUND-TRIP SUCCESSFUL!                    ║" -ForegroundColor Green
+    Write-Host "║     ROUND-TRIP SUCCESSFUL!                    ║" -ForegroundColor Green
     Write-Host "║    All data preserved through SQLite           ║" -ForegroundColor Green
     Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Green
     
@@ -118,7 +118,7 @@ if ($allMatch) {
     Write-Host "  $TargetDB (SQL Server)" -ForegroundColor Gray
 } else {
     Write-Host "╔════════════════════════════════════════════════╗" -ForegroundColor Red
-    Write-Host "║    ✗ ROUND-TRIP FAILED                         ║" -ForegroundColor Red
+    Write-Host "║      ROUND-TRIP FAILED                         ║" -ForegroundColor Red
     Write-Host "║    Data loss detected                          ║" -ForegroundColor Red
     Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Red
 }

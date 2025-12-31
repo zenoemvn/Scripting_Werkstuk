@@ -77,7 +77,7 @@ INSERT INTO Orders (CustomerID, OrderDate, Total) VALUES
 "@
     
     Invoke-Sqlcmd -ServerInstance $ServerInstance -TrustServerCertificate -Query $createDbQuery
-    Write-Host "✓ Test database created" -ForegroundColor Green
+    Write-Host " Test database created" -ForegroundColor Green
 }
 
 # Perform SQLite migration
@@ -95,7 +95,7 @@ $report1 = Export-MigrationReport `
     -MigrationName "SQL Server to SQLite - MigrationDemo"
 
 if ($report1.Success) {
-    Write-Host "✓ Report saved: $($report1.OutputPath)" -ForegroundColor Green
+    Write-Host " Report saved: $($report1.OutputPath)" -ForegroundColor Green
     Write-Host "  - Tables: $($report1.TotalTables)" -ForegroundColor Gray
     Write-Host "  - Success: $($report1.SuccessfulTables)" -ForegroundColor Green
     Write-Host "  - Failed: $($report1.FailedTables)" -ForegroundColor $(if ($report1.FailedTables -gt 0) { "Red" } else { "Gray" })
@@ -120,7 +120,7 @@ $report2 = Export-MigrationReport `
     -MigrationName "SQLite to SQL Server - Restore with Validation"
 
 if ($report2.Success) {
-    Write-Host "✓ Report saved: $($report2.OutputPath)" -ForegroundColor Green
+    Write-Host " Report saved: $($report2.OutputPath)" -ForegroundColor Green
 }
 
 # Option 3: CSV Import Report
@@ -149,9 +149,9 @@ $report3 = Export-MigrationReport `
     -MigrationName "CSV Import - MigrationDemo"
 
 if ($report3.Success) {
-    Write-Host "✓ Report saved: $($report3.OutputPath)" -ForegroundColor Green
+    Write-Host " Report saved: $($report3.OutputPath)" -ForegroundColor Green
     if ($report3.TotalErrors -gt 0) {
-        Write-Host "  ⚠ Errors logged: $($report3.TotalErrors)" -ForegroundColor Yellow
+        Write-Host "   Errors logged: $($report3.TotalErrors)" -ForegroundColor Yellow
     }
 }
 

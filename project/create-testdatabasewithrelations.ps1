@@ -20,7 +20,7 @@ END
 CREATE DATABASE $DatabaseName;
 "@
 
-Write-Host "✓ Database created" -ForegroundColor Green
+Write-Host " Database created" -ForegroundColor Green
 
 # Create tables met foreign keys
 Write-Host "Creating tables with foreign keys..." -ForegroundColor Yellow
@@ -105,7 +105,7 @@ CREATE TABLE Reviews (
 );
 "@
 
-Write-Host "✓ Tables created" -ForegroundColor Green
+Write-Host " Tables created" -ForegroundColor Green
 
 # Insert test data
 Write-Host "Inserting test data..." -ForegroundColor Yellow
@@ -169,7 +169,7 @@ INSERT INTO Reviews (ProductID, CustomerID, Rating, Comment) VALUES
 (7, 3, 5, 'Best mechanical keyboard I have used');
 "@
 
-Write-Host "✓ Test data inserted" -ForegroundColor Green
+Write-Host " Test data inserted" -ForegroundColor Green
 
 # Show summary
 Write-Host "`n=== Database Summary ===" -ForegroundColor Cyan
@@ -208,6 +208,6 @@ INNER JOIN sys.foreign_key_columns fc ON fk.object_id = fc.constraint_object_id
 ORDER BY ChildTable
 "@ | Format-Table -AutoSize
 
-Write-Host "`n✓ Setup complete!" -ForegroundColor Green
+Write-Host "`n Setup complete!" -ForegroundColor Green
 Write-Host "Database: $DatabaseName" -ForegroundColor Yellow
 Write-Host "You can now test migrations with realistic relational data!" -ForegroundColor Gray

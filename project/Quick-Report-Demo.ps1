@@ -24,7 +24,7 @@ Import-Module .\Modules\DatabaseMigration.psm1 -Force
 # Check if we have a test database
 $testDbPath = ".\data\SalesDB.db"
 if (-not (Test-Path $testDbPath)) {
-    Write-Host "`n⚠ No test database found at $testDbPath" -ForegroundColor Yellow
+    Write-Host "`n No test database found at $testDbPath" -ForegroundColor Yellow
     Write-Host "Please run one of the test scripts first to create sample data." -ForegroundColor Yellow
     Write-Host "`nExample:" -ForegroundColor Gray
     Write-Host "  .\create-testdatabasewithrelations.ps1 -ServerInstance '$ServerInstance' -DatabaseName 'TestDB'" -ForegroundColor White
@@ -52,7 +52,7 @@ $reportResult = Export-MigrationReport `
 # Display results
 if ($reportResult.Success) {
     Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Green
-    Write-Host "║   ✓ REPORT SUCCESSFULLY CREATED                ║" -ForegroundColor Green
+    Write-Host "║    REPORT SUCCESSFULLY CREATED                ║" -ForegroundColor Green
     Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Green
     
     Write-Host "`nReport Location:" -ForegroundColor Cyan
@@ -70,10 +70,10 @@ if ($reportResult.Success) {
     }
     
     Write-Host "`nReport Contents:" -ForegroundColor Cyan
-    Write-Host "  📊 Summary Sheet   - Migration overview & statistics" -ForegroundColor Gray
-    Write-Host "  📋 Details Sheet   - Per-table breakdown" -ForegroundColor Gray
+    Write-Host "   Summary Sheet   - Migration overview & statistics" -ForegroundColor Gray
+    Write-Host "   Details Sheet   - Per-table breakdown" -ForegroundColor Gray
     if ($reportResult.TotalErrors -gt 0) {
-        Write-Host "  ⚠️  Errors Sheet    - Error details & timestamps" -ForegroundColor Yellow
+        Write-Host "    Errors Sheet    - Error details & timestamps" -ForegroundColor Yellow
     }
     
     Write-Host "`nTo open the report:" -ForegroundColor Yellow
@@ -85,6 +85,6 @@ if ($reportResult.Success) {
         Start-Process $reportResult.OutputPath
     }
 } else {
-    Write-Host "`n✗ Report generation failed" -ForegroundColor Red
+    Write-Host "`n Report generation failed" -ForegroundColor Red
     Write-Host "Error: $($reportResult.Error)" -ForegroundColor Red
 }

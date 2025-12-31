@@ -91,7 +91,7 @@ BEGIN
     DROP DATABASE [$($script:TestDatabase)];
 END
 "@
-        Write-Host "✓ Test database cleaned up" -ForegroundColor Green
+        Write-Host " Test database cleaned up" -ForegroundColor Green
     }
     catch {
         Write-Warning "Could not clean up test database: $_"

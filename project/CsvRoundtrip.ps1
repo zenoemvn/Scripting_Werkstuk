@@ -32,7 +32,7 @@ $exportResult = Export-DatabaseSchemaToCsv `
     -Database $SourceDatabase `
     -OutputFolder $ExportFolder
 
-Write-Host "✓ Export completed" -ForegroundColor Green
+Write-Host " Export completed" -ForegroundColor Green
 
 # STAP 2: Inspect metadata
 Write-Host "`n[STEP 2] Inspecting metadata..." -ForegroundColor Yellow
@@ -72,7 +72,7 @@ END
 CREATE DATABASE [$TargetDatabase];
 "@
 
-Write-Host "✓ Target database created" -ForegroundColor Green
+Write-Host " Target database created" -ForegroundColor Green
 
 # STAP 4: Import CSV naar nieuwe database (met metadata)
 Write-Host "`n[STEP 4] Importing CSV to $TargetDatabase (using metadata)..." -ForegroundColor Yellow
@@ -82,7 +82,7 @@ $importResult = Import-DatabaseFromCsv `
     -Database $TargetDatabase `
     -CsvFolder $ExportFolder
 
-Write-Host "✓ Import completed" -ForegroundColor Green
+Write-Host " Import completed" -ForegroundColor Green
 
 # STAP 5: Verify schema in restored database
 Write-Host "`n[STEP 5] Verifying restored schema..." -ForegroundColor Yellow
@@ -144,7 +144,7 @@ foreach ($table in $tables) {
         -TrustServerCertificate `
         -Query "SELECT COUNT(*) as cnt FROM [$table]").cnt
     
-    $status = if ($sourceCount -eq $targetCount) { "✓" } else { "✗" }
+    $status = if ($sourceCount -eq $targetCount) { "" } else { " " }
     $color = if ($sourceCount -eq $targetCount) { "Green" } else { "Red" }
     
     Write-Host "  $status $table : $sourceCount → $targetCount" -ForegroundColor $color
@@ -162,7 +162,7 @@ Write-Host "Primary Keys       : $($restoredPKs.Count)" -ForegroundColor Gray
 Write-Host "Foreign Keys       : $($restoredFKs.Count)" -ForegroundColor Gray
 
 if ($importResult.Success -and $restoredPKs.Count -gt 0 -and $restoredFKs.Count -gt 0) {
-    Write-Host "`n✓ Schema successfully preserved through CSV export/import!" -ForegroundColor Green
+    Write-Host "`n Schema successfully preserved through CSV export/import!" -ForegroundColor Green
 } else {
-    Write-Host "`n⚠ Schema may not be fully preserved" -ForegroundColor Yellow
+    Write-Host "`n Schema may not be fully preserved" -ForegroundColor Yellow
 }

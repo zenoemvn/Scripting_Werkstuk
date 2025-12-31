@@ -20,7 +20,7 @@ $dbCheck = Invoke-Sqlcmd -ServerInstance $ServerInstance `
     -Query "SELECT name FROM sys.databases WHERE name = '$Database'"
 
 if (-not $dbCheck) {
-    Write-Host "✗ Database '$Database' not found!" -ForegroundColor Red
+    Write-Host "  Database '$Database' not found!" -ForegroundColor Red
     Write-Host "Run: .\create-testdatabasewithrelations.ps1 first" -ForegroundColor Yellow
     exit
 }
@@ -49,7 +49,7 @@ if ($result.Success) {
             $hasForeignKeys = $true
             Write-Host "`n  Table: $table" -ForegroundColor Cyan
             foreach ($fk in $fks) {
-                Write-Host "    ✓ $($fk.from) → $($fk.table)($($fk.to))" -ForegroundColor Green
+                Write-Host "     $($fk.from) → $($fk.table)($($fk.to))" -ForegroundColor Green
             }
         }
     }
@@ -95,7 +95,7 @@ LIMIT 5
             $joinResult | Format-Table -AutoSize
             
             if ($joinResult) {
-                Write-Host "✓ JOIN queries work - foreign keys are functional!" -ForegroundColor Green
+                Write-Host " JOIN queries work - foreign keys are functional!" -ForegroundColor Green
             }
         }
         catch {

@@ -25,14 +25,14 @@
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|---------|
-| LastName | nvarchar(50) | ✓ |  |
-| FirstName | nvarchar(50) | ✓ |  |
-| Country | nvarchar(50) | ✓ |  |
-| CreatedDate | nvarchar(50) | ✓ |  |
-| CustomerID | int() | ✗ |  |
-| City | nvarchar(50) | ✓ |  |
-| Email | nvarchar(50) | ✓ |  |
-| Phone | nvarchar(50) | ✓ |  |
+| LastName | nvarchar(50) |  |  |
+| FirstName | nvarchar(50) |  |  |
+| Country | nvarchar(50) |  |  |
+| CreatedDate | nvarchar(50) |  |  |
+| CustomerID | int() |   |  |
+| City | nvarchar(50) |  |  |
+| Email | nvarchar(50) |  |  |
+| Phone | nvarchar(50) |  |  |
 
 ### Primary Key
 
@@ -42,7 +42,7 @@
 
 | Index Name | Type | Unique | Columns |
 |------------|------|--------|---------|
-| PK_Customers | CLUSTERED | ✓ | CustomerID |
+| PK_Customers | CLUSTERED |  | CustomerID |
 
 ---
 
@@ -55,12 +55,12 @@
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|---------|
-| ProductID | int() | ✗ |  |
-| CreatedDate | nvarchar(50) | ✓ |  |
-| ProductName | nvarchar(50) | ✓ |  |
-| Stock | int() | ✓ |  |
-| Category | nvarchar(50) | ✓ |  |
-| Price | decimal() | ✓ |  |
+| ProductID | int() |   |  |
+| CreatedDate | nvarchar(50) |  |  |
+| ProductName | nvarchar(50) |  |  |
+| Stock | int() |  |  |
+| Category | nvarchar(50) |  |  |
+| Price | decimal() |  |  |
 
 ### Primary Key
 
@@ -70,7 +70,7 @@
 
 | Index Name | Type | Unique | Columns |
 |------------|------|--------|---------|
-| PK_Products | CLUSTERED | ✓ | ProductID |
+| PK_Products | CLUSTERED |  | ProductID |
 
 ---
 
@@ -83,12 +83,12 @@
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|---------|
-| ProductID | int() | ✓ |  |
-| Quantity | int() | ✓ |  |
-| Discount | decimal() | ✓ |  |
-| UnitPrice | decimal() | ✓ |  |
-| OrderDetailID | int() | ✗ |  |
-| OrderID | int() | ✓ |  |
+| ProductID | int() |  |  |
+| Quantity | int() |  |  |
+| Discount | decimal() |  |  |
+| UnitPrice | decimal() |  |  |
+| OrderDetailID | int() |   |  |
+| OrderID | int() |  |  |
 
 ### Primary Key
 
@@ -105,7 +105,7 @@
 
 | Index Name | Type | Unique | Columns |
 |------------|------|--------|---------|
-| PK_OrderDetails | CLUSTERED | ✓ | OrderDetailID |
+| PK_OrderDetails | CLUSTERED |  | OrderDetailID |
 
 ---
 
@@ -118,12 +118,12 @@
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|---------|
-| ShippingAddress | nvarchar(50) | ✓ |  |
-| OrderID | int() | ✗ |  |
-| CustomerID | int() | ✓ |  |
-| TotalAmount | decimal() | ✓ |  |
-| OrderDate | nvarchar(50) | ✓ |  |
-| Status | nvarchar(50) | ✓ |  |
+| ShippingAddress | nvarchar(50) |  |  |
+| OrderID | int() |   |  |
+| CustomerID | int() |  |  |
+| TotalAmount | decimal() |  |  |
+| OrderDate | nvarchar(50) |  |  |
+| Status | nvarchar(50) |  |  |
 
 ### Primary Key
 
@@ -139,7 +139,7 @@
 
 | Index Name | Type | Unique | Columns |
 |------------|------|--------|---------|
-| PK_Orders | CLUSTERED | ✓ | OrderID |
+| PK_Orders | CLUSTERED |  | OrderID |
 
 ---
 
@@ -152,12 +152,12 @@
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|---------|
-| ProductID | int() | ✓ |  |
-| ReviewDate | nvarchar(50) | ✓ |  |
-| ReviewID | int() | ✗ |  |
-| CustomerID | int() | ✓ |  |
-| Comment | nvarchar(50) | ✓ |  |
-| Rating | int() | ✓ |  |
+| ProductID | int() |  |  |
+| ReviewDate | nvarchar(50) |  |  |
+| ReviewID | int() |   |  |
+| CustomerID | int() |  |  |
+| Comment | nvarchar(50) |  |  |
+| Rating | int() |  |  |
 
 ### Primary Key
 
@@ -174,7 +174,7 @@
 
 | Index Name | Type | Unique | Columns |
 |------------|------|--------|---------|
-| PK_Reviews | CLUSTERED | ✓ | ReviewID |
+| PK_Reviews | CLUSTERED |  | ReviewID |
 
 ---
 

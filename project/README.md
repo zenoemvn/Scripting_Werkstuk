@@ -1,6 +1,6 @@
 # 🗄️ Database Migration Toolkit
 
-## 📋 Inhoudsopgave
+##  Inhoudsopgave
 
 - [Het Doel van het Project](#-het-doel-van-het-project)
 - [Requirements](#-requirements)
@@ -281,7 +281,7 @@ Import-CsvToSqlTable `
 > 1. **Module functies** (aanbevolen): `Import-Module .\Modules\DatabaseMigration.psm1` en gebruik de functies
 > 2. **Standalone scripts**: Direct de `.ps1` scripts aanroepen (bijvoorbeeld `.\Csvimport.ps1`)
 > 
-> ⚠️ **Let op:** Standalone scripts gebruiken andere parameter namen dan de module functies!
+>  **Let op:** Standalone scripts gebruiken andere parameter namen dan de module functies!
 
 ### Quick Start: Complete Workflow
 
@@ -458,10 +458,10 @@ Het project bevat verschillende kant-en-klare scripts voor veelvoorkomende taken
 
 1. **Gebruik altijd schema metadata voor database migraties**
    ```powershell
-   # ✓ Correct: Met metadata
+   #  Correct: Met metadata
    Export-DatabaseSchemaToCsv -Database "DB" -OutputFolder ".\Export"
    
-   # ✗ Niet aanbevolen voor migraties: Zonder metadata
+   #   Niet aanbevolen voor migraties: Zonder metadata
    Export-SqlTableToCsv -TableName "Table" -OutputPath ".\table.csv"
    ```
 
@@ -622,7 +622,7 @@ De `DatabaseMigration.psm1` module exporteert **13 hoofdfuncties** verdeeld over
 | `Export-SqlTableToCsv` | SQL Tabel | CSV bestand | Exporteer enkele tabel naar CSV |
 | `Export-DatabaseSchemaToCsv` | SQL Database | CSV + JSON metadata | Exporteer complete DB met schema |
 | `Import-CsvToSqlTable` | CSV bestand | SQL Tabel | Importeer CSV naar tabel |
-| `Import-DatabaseFromCsv` | CSV folder | SQL Database | Importeer complete DB uit CSV<br>⚠️ **Let op:** Database moet al bestaan! |
+| `Import-DatabaseFromCsv` | CSV folder | SQL Database | Importeer complete DB uit CSV<br> **Let op:** Database moet al bestaan! |
 
 #### 3. Analysis & Documentation (Rapportage)
 

@@ -377,7 +377,7 @@ END
 CREATE DATABASE [$Database];
 "@
             Invoke-Sqlcmd -ServerInstance $ServerInstance -TrustServerCertificate -Query $createDbQuery
-            Write-Host "✓ Database created" -ForegroundColor Green
+            Write-Host " Database created" -ForegroundColor Green
 
             Write-Host "`n[3/5] Migrating tables..." -ForegroundColor Yellow
             $migrationResults = @()
@@ -436,7 +436,7 @@ CREATE DATABASE [$Database];
                     $data = Invoke-SqliteQuery -DataSource $SQLitePath -Query "SELECT * FROM [$tableName]"
 
                     if ($null -eq $data -or $data.Count -eq 0) {
-                        Write-Host "    ⚠ Empty table" -ForegroundColor Yellow
+                        Write-Host "     Empty table" -ForegroundColor Yellow
                         $migrationResults += [PSCustomObject]@{ TableName=$tableName; RowsMigrated=0; Success=$true }
                         continue
                     }
@@ -507,7 +507,7 @@ CREATE DATABASE [$Database];
                         -Query "SELECT COUNT(*) as cnt FROM [$tableName]").cnt
                     
                     if ($destRowCount -ne $totalDataRows) {
-                        Write-Warning "    ⚠ Row count mismatch! Source: $totalDataRows, Destination: $destRowCount"
+                        Write-Warning "     Row count mismatch! Source: $totalDataRows, Destination: $destRowCount"
                     }
                     
                     # Validate checksum if requested
@@ -516,15 +516,15 @@ CREATE DATABASE [$Database];
                         $validation = Test-DataIntegrity -SourceChecksum $sourceChecksum -DestinationChecksum $destChecksum
                         
                         if (-not $validation.Valid) {
-                            Write-Warning "    ⚠ Data integrity check failed!"
+                            Write-Warning "     Data integrity check failed!"
                             Write-Warning "      Row count match: $($validation.RowCountMatch)"
                             Write-Warning "      Checksum match: $($validation.ChecksumMatch)"
                         } else {
-                            Write-Host "    ✓ Data integrity validated" -ForegroundColor Green
+                            Write-Host "     Data integrity validated" -ForegroundColor Green
                         }
                     }
 
-                    Write-Host "    ✓ Migrated $insertedRows rows" -ForegroundColor Green
+                    Write-Host "     Migrated $insertedRows rows" -ForegroundColor Green
                     $totalRows += $insertedRows
                     $migrationResults += [PSCustomObject]@{ 
                         TableName = $tableName
@@ -534,7 +534,7 @@ CREATE DATABASE [$Database];
                     }
                 }
                 catch {
-                    Write-Host "    ✗ Failed: $_" -ForegroundColor Red
+                    Write-Host "      Failed: $_" -ForegroundColor Red
                     $migrationResults += [PSCustomObject]@{ TableName=$tableName; RowsMigrated=0; Success=$false; Error=$_.Exception.Message }
                 }
             }
@@ -548,11 +548,11 @@ CREATE DATABASE [$Database];
                         $fkName = "FK_$($tableName)_$($fk.ToTable)_$($fk.FromColumn)"
                         $fkQuery = "ALTER TABLE [$tableName] ADD CONSTRAINT [$fkName] FOREIGN KEY ([$($fk.FromColumn)]) REFERENCES [$($fk.ToTable)]([$($fk.ToColumn)])"
                         Invoke-Sqlcmd -ServerInstance $ServerInstance -Database $Database -TrustServerCertificate -Query $fkQuery
-                        Write-Host "    ✓ Added FK: $fkName" -ForegroundColor Green
+                        Write-Host "     Added FK: $fkName" -ForegroundColor Green
                         $fkCount++
                     }
                     catch {
-                        Write-Host "    ⚠ Could not add FK: $_" -ForegroundColor Yellow
+                        Write-Host "     Could not add FK: $_" -ForegroundColor Yellow
                     }
                 }
             }
@@ -568,9 +568,9 @@ CREATE DATABASE [$Database];
 
             $successCount = ($migrationResults | Where-Object { $_.Success }).Count
             if ($successCount -eq $migrationResults.Count) {
-                Write-Host "✓ Migration completed successfully!" -ForegroundColor Green
+                Write-Host " Migration completed successfully!" -ForegroundColor Green
             } else {
-                Write-Host "⚠ Migration completed with errors" -ForegroundColor Yellow
+                Write-Host " Migration completed with errors" -ForegroundColor Yellow
             }
 
             $endTime = Get-Date
@@ -808,7 +808,7 @@ function Convert-SqlServerToSQLite {
             }
             
             Invoke-SqliteQuery -DataSource $SQLitePath -Query "PRAGMA foreign_keys = ON;"
-            Write-Host "✓ SQLite database created" -ForegroundColor Green
+            Write-Host " SQLite database created" -ForegroundColor Green
             
             Write-Host "`n[3/4] Migrating tables..." -ForegroundColor Yellow
             $migrationResults = @()
@@ -910,7 +910,7 @@ WHERE t.name = '$tableName'
                     }
                     
                     if ($constraintInfo.Count -gt 0) {
-                        Write-Host "    ✓ Schema created with $($constraintInfo -join ', ')" -ForegroundColor Green
+                        Write-Host "     Schema created with $($constraintInfo -join ', ')" -ForegroundColor Green
                     }
                     
                     Write-Host "    Fetching data..." -ForegroundColor Gray
@@ -920,7 +920,7 @@ WHERE t.name = '$tableName'
                         -Query "SELECT * FROM [$tableName]"
                     
                     if ($null -eq $data -or $data.Count -eq 0) {
-                        Write-Host "    ⚠ Empty table" -ForegroundColor Yellow
+                        Write-Host "     Empty table" -ForegroundColor Yellow
                         $migrationResults += [PSCustomObject]@{
                             TableName = $tableName
                             RowsMigrated = 0
@@ -959,7 +959,7 @@ WHERE t.name = '$tableName'
                             }
                         }
                         
-                        Write-Host "    ✓ Migrated $insertedRows rows" -ForegroundColor Green
+                        Write-Host "     Migrated $insertedRows rows" -ForegroundColor Green
                         
                         $totalRows += $insertedRows
                         
@@ -970,7 +970,7 @@ WHERE t.name = '$tableName'
                         }
                     }
                     catch {
-                        Write-Host "    ✗ Failed: $_" -ForegroundColor Red
+                        Write-Host "      Failed: $_" -ForegroundColor Red
                         
                         $migrationResults += [PSCustomObject]@{
                             TableName = $tableName
@@ -981,7 +981,7 @@ WHERE t.name = '$tableName'
                     }
                 }
                 catch {
-                    Write-Host "    ✗ Table migration failed: $_" -ForegroundColor Red
+                    Write-Host "      Table migration failed: $_" -ForegroundColor Red
                     
                     $migrationResults += [PSCustomObject]@{
                         TableName = $tableName
@@ -1013,9 +1013,9 @@ WHERE t.name = '$tableName'
             $successCount = ($migrationResults | Where-Object { $_.Success }).Count
             
             if ($successCount -eq $migrationResults.Count) {
-                Write-Host "✓ Migration completed successfully!" -ForegroundColor Green
+                Write-Host " Migration completed successfully!" -ForegroundColor Green
             } else {
-                Write-Host "⚠ Migration completed with errors" -ForegroundColor Yellow
+                Write-Host " Migration completed with errors" -ForegroundColor Yellow
             }
             
             $endTime = Get-Date
@@ -1330,21 +1330,21 @@ WHERE t.name = '$tableName'
                 
                 if ($data) {
                     $data | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8
-                    Write-Host "    ✓ Exported $($data.Count) rows to $tableName.csv" -ForegroundColor Green
+                    Write-Host "     Exported $($data.Count) rows to $tableName.csv" -ForegroundColor Green
                 } else {
                     # Create empty CSV with headers
                     $headers = $columns | Select-Object -ExpandProperty COLUMN_NAME
                     $emptyData = [PSCustomObject]@{}
                     foreach ($h in $headers) { $emptyData | Add-Member -NotePropertyName $h -NotePropertyValue $null }
                     @($emptyData) | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8
-                    Write-Host "    ⚠ Empty table - created CSV with headers only" -ForegroundColor Yellow
+                    Write-Host "     Empty table - created CSV with headers only" -ForegroundColor Yellow
                 }
             }
             
             # Save metadata to JSON
             $metadataPath = Join-Path $OutputFolder "schema-metadata.json"
             $metadata | ConvertTo-Json -Depth 10 | Set-Content -Path $metadataPath -Encoding UTF8
-            Write-Host "`n✓ Schema metadata saved to schema-metadata.json" -ForegroundColor Green
+            Write-Host "`n Schema metadata saved to schema-metadata.json" -ForegroundColor Green
             
             Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
             Write-Host "║              EXPORT SUMMARY                    ║" -ForegroundColor Cyan
@@ -1498,7 +1498,7 @@ ORDER BY ORDINAL_POSITION
                     if ($col.CHARACTER_MAXIMUM_LENGTH) {
                         $dataType += "($($col.CHARACTER_MAXIMUM_LENGTH))"
                     }
-                    $nullable = if ($col.IS_NULLABLE -eq 'YES') { '✓' } else { '✗' }
+                    $nullable = if ($col.IS_NULLABLE -eq 'YES') { '' } else { ' ' }
                     $default = if ($col.COLUMN_DEFAULT) { $col.COLUMN_DEFAULT } else { '' }
                     
                     [void]$markdown.AppendLine("| $($col.COLUMN_NAME) | $dataType | $nullable | $default |")
@@ -1585,7 +1585,7 @@ GROUP BY i.name, i.type_desc, i.is_unique, i.is_primary_key
                     [void]$markdown.AppendLine("|------------|------|--------|---------|")
                     
                     foreach ($idx in $indexInfo) {
-                        $unique = if ($idx.IsUnique -eq 1) { '✓' } else { '✗' }
+                        $unique = if ($idx.IsUnique -eq 1) { '' } else { ' ' }
                         [void]$markdown.AppendLine("| $($idx.IndexName) | $($idx.IndexType) | $unique | $($idx.Columns) |")
                     }
                     [void]$markdown.AppendLine()
@@ -1659,7 +1659,7 @@ WHERE t.name = '$tableName'
             # Write to file
             $markdown.ToString() | Set-Content -Path $OutputPath -Encoding UTF8
             
-            Write-Host "`n✓ Markdown documentation saved to: $OutputPath" -ForegroundColor Green
+            Write-Host "`n Markdown documentation saved to: $OutputPath" -ForegroundColor Green
             Write-Host "  Tables documented: $($Tables.Count)" -ForegroundColor Gray
             Write-Host "  Total size: $([Math]::Round($totalSizeKB / 1024, 2)) MB" -ForegroundColor Gray
             
@@ -1808,7 +1808,7 @@ function Export-SqlTableToCsv {
                 $data | Export-Csv -Path $OutputPath -NoTypeInformation -Encoding UTF8
             }
             
-            Write-Host "✓ Exported $($data.Count) rows to $OutputPath" -ForegroundColor Green
+            Write-Host " Exported $($data.Count) rows to $OutputPath" -ForegroundColor Green
             
             return [PSCustomObject]@{
                 TableName = $TableName
@@ -2035,7 +2035,7 @@ CREATE TABLE [$TableName] (
                     -DisableVariables `
                     -Query $createTableSql
                 
-                Write-Host "✓ Table created" -ForegroundColor Green
+                Write-Host " Table created" -ForegroundColor Green
             }
             
             Write-Host "Importing data..." -ForegroundColor Cyan
@@ -2146,7 +2146,7 @@ CREATE TABLE [$TableName] (
                         -Query "COMMIT TRANSACTION"
                 }
                 
-                Write-Host "✓ Import completed!" -ForegroundColor Green
+                Write-Host " Import completed!" -ForegroundColor Green
                 Write-Host "  Rows imported: $importedRows" -ForegroundColor Gray
                 
                 if ($errors.Count -gt 0) {
@@ -2175,7 +2175,7 @@ CREATE TABLE [$TableName] (
                             -Database $Database `
                             -TrustServerCertificate `
                             -Query "ROLLBACK TRANSACTION"
-                        Write-Host "✓ Transaction rolled back" -ForegroundColor Yellow
+                        Write-Host " Transaction rolled back" -ForegroundColor Yellow
                     }
                     catch {
                         Write-Error "Failed to rollback transaction: $_"
@@ -2315,7 +2315,7 @@ WHERE [$columnName] IS NOT NULL
                                 ToColumn = $refPkColumn
                             }
                             
-                            Write-Host "    ✓ $tableName.$columnName → $refTableName.$refPkColumn" -ForegroundColor Green
+                            Write-Host "     $tableName.$columnName → $refTableName.$refPkColumn" -ForegroundColor Green
                         }
                     }
                 }
@@ -2386,7 +2386,7 @@ function Import-DatabaseFromCsv {
                 Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
                 Write-Host "║   CSV Import with Metadata (Schema Preserved) ║" -ForegroundColor Cyan
                 Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
-                Write-Host "✓ Found schema-metadata.json - using stored schema" -ForegroundColor Green
+                Write-Host " Found schema-metadata.json - using stored schema" -ForegroundColor Green
                 
                 $metadata = Get-Content $metadataPath -Raw | ConvertFrom-Json
                 
@@ -2428,7 +2428,7 @@ function Import-DatabaseFromCsv {
                 Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
                 Write-Host "║      CSV Import without Metadata               ║" -ForegroundColor Cyan
                 Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
-                Write-Host "⚠ No schema-metadata.json found - constraints may be lost" -ForegroundColor Yellow
+                Write-Host " No schema-metadata.json found - constraints may be lost" -ForegroundColor Yellow
             }
             
             $csvFiles = Get-ChildItem -Path $CsvFolder -Filter "*.csv"
@@ -2468,7 +2468,7 @@ function Import-DatabaseFromCsv {
                             -Query "DROP TABLE IF EXISTS [$tableName]" `
                             -ErrorAction SilentlyContinue
                         
-                        Write-Host "  ✓ Dropped $tableName" -ForegroundColor Gray
+                        Write-Host "   Dropped $tableName" -ForegroundColor Gray
                     } catch {
                         Write-Verbose "Could not drop $tableName (might not exist)"
                     }
@@ -2503,9 +2503,9 @@ function Import-DatabaseFromCsv {
                 
                 if ($result.Success) {
                     $successCount++
-                    Write-Host "  ✓ $($result.RowsImported) rows imported" -ForegroundColor Green
+                    Write-Host "   $($result.RowsImported) rows imported" -ForegroundColor Green
                 } else {
-                    Write-Host "  ✗ Import failed" -ForegroundColor Red
+                    Write-Host "    Import failed" -ForegroundColor Red
                     if ($result.Errors.Count -gt 0) {
                         $result.Errors | Select-Object -First 3 | ForEach-Object {
                             Write-Host "    $_" -ForegroundColor Red
@@ -2542,10 +2542,10 @@ PRIMARY KEY ([$pkColumn])
 "@
                         
                         Invoke-Sqlcmd -ServerInstance $ServerInstance -Database $Database -TrustServerCertificate -Query $query -ErrorAction Stop
-                        Write-Host "  ✓ Primary key added to $tableName" -ForegroundColor Green
+                        Write-Host "   Primary key added to $tableName" -ForegroundColor Green
                     }
                     catch {
-                        Write-Host "  ✗ Failed to add PK to $tableName : $_" -ForegroundColor Red
+                        Write-Host "    Failed to add PK to $tableName : $_" -ForegroundColor Red
                     }
                 }
             }
@@ -2556,10 +2556,10 @@ PRIMARY KEY ([$pkColumn])
                 $detectedFKs = Find-ForeignKeysFromData -ServerInstance $ServerInstance -Database $Database
                 
                 if ($detectedFKs.Count -gt 0) {
-                    Write-Host "  ✓ Detected $($detectedFKs.Count) potential foreign key(s)" -ForegroundColor Green
+                    Write-Host "   Detected $($detectedFKs.Count) potential foreign key(s)" -ForegroundColor Green
                     $ForeignKeys = $detectedFKs
                 } else {
-                    Write-Host "  ⚠ No foreign keys detected automatically" -ForegroundColor Yellow
+                    Write-Host "   No foreign keys detected automatically" -ForegroundColor Yellow
                 }
             }
             
@@ -2583,10 +2583,10 @@ REFERENCES [$($fk.ToTable)]([$($fk.ToColumn)])
 "@
                         
                         Invoke-Sqlcmd -ServerInstance $ServerInstance -Database $Database -TrustServerCertificate -Query $query -ErrorAction Stop
-                        Write-Host "  ✓ $fkName added" -ForegroundColor Green
+                        Write-Host "   $fkName added" -ForegroundColor Green
                     }
                     catch {
-                        Write-Host "  ✗ Failed to add $fkName : $_" -ForegroundColor Red
+                        Write-Host "    Failed to add $fkName : $_" -ForegroundColor Red
                     }
                 }
             }
@@ -2713,7 +2713,7 @@ function Export-MigrationReport {
                 Write-Warning "ImportExcel module not found. Installing..."
                 try {
                     Install-Module -Name ImportExcel -Scope CurrentUser -Force -AllowClobber
-                    Write-Host "✓ ImportExcel module installed" -ForegroundColor Green
+                    Write-Host " ImportExcel module installed" -ForegroundColor Green
                 }
                 catch {
                     Write-Error "Failed to install ImportExcel module. Please install it manually: Install-Module -Name ImportExcel"
@@ -2811,7 +2811,7 @@ function Export-MigrationReport {
                 [PSCustomObject]@{ Property = 'Migration Name'; Value = $MigrationName }
                 [PSCustomObject]@{ Property = 'Migration Type'; Value = $migrationType }
                 [PSCustomObject]@{ Property = 'Date & Time'; Value = $timestamp.ToString("yyyy-MM-dd HH:mm:ss") }
-                [PSCustomObject]@{ Property = 'Overall Status'; Value = if ($success) { "✓ Success" } else { "⚠ Completed with errors" } }
+                [PSCustomObject]@{ Property = 'Overall Status'; Value = if ($success) { " Success" } else { " Completed with errors" } }
                 [PSCustomObject]@{ Property = ''; Value = '' }
                 [PSCustomObject]@{ Property = 'Total Tables'; Value = $totalTables }
                 [PSCustomObject]@{ Property = 'Successful Tables'; Value = $successfulTables }
@@ -2867,13 +2867,13 @@ function Export-MigrationReport {
                     
                     [PSCustomObject]@{
                         'Table Name' = $tableName
-                        'Status' = if ($success) { "✓ Success" } else { "✗ Failed" }
+                        'Status' = if ($success) { " Success" } else { "  Failed" }
                         'Rows Processed' = $rowCount
                         'Row Count Match' = if ($null -ne $rowCountMatch) { 
-                            if ($rowCountMatch) { "✓ Yes" } else { "✗ No" }
+                            if ($rowCountMatch) { " Yes" } else { "  No" }
                         } else { "N/A" }
                         'Checksum Valid' = if ($null -ne $checksumMatch) { 
-                            if ($checksumMatch) { "✓ Yes" } else { "✗ No" }
+                            if ($checksumMatch) { " Yes" } else { "  No" }
                         } else { "N/A" }
                         'Error Message' = $error
                     }
@@ -2881,8 +2881,8 @@ function Export-MigrationReport {
                 
                 $detailsData | Export-Excel -Path $OutputPath -WorksheetName "Details" -AutoSize -TableName "MigrationDetails" -TableStyle Medium6 `
                     -ConditionalText $(
-                        New-ConditionalText -Text "✓ Success" -ConditionalTextColor Green -BackgroundColor LightGreen
-                        New-ConditionalText -Text "✗ Failed" -ConditionalTextColor Red -BackgroundColor LightPink
+                        New-ConditionalText -Text " Success" -ConditionalTextColor Green -BackgroundColor LightGreen
+                        New-ConditionalText -Text "  Failed" -ConditionalTextColor Red -BackgroundColor LightPink
                     )
             }
             
@@ -2961,7 +2961,7 @@ function Export-MigrationReport {
                 }
             }
             
-            Write-Host "`n✓ Migration report created: $OutputPath" -ForegroundColor Green
+            Write-Host "`n Migration report created: $OutputPath" -ForegroundColor Green
             Write-Host "  Sheets included:" -ForegroundColor Gray
             Write-Host "    - Summary (overview)" -ForegroundColor Gray
             if ($results -and $results.Count -gt 0) {

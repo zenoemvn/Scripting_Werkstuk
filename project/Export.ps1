@@ -68,7 +68,7 @@ ORDER BY t.name
         -Tables $tablesToExport
     
     if ($result.Success) {
-        Write-Host "`n✓ Export with metadata completed successfully!" -ForegroundColor Green
+        Write-Host "`n Export with metadata completed successfully!" -ForegroundColor Green
         Write-Host "  Schema metadata saved to: schema-metadata.json" -ForegroundColor Gray
     }
     
@@ -116,9 +116,9 @@ Write-Host "`n[STEP 2] Creating output folder..." -ForegroundColor Yellow
 
 if (-not (Test-Path $OutputFolder)) {
     New-Item -Path $OutputFolder -ItemType Directory -Force | Out-Null
-    Write-Host "  ✓ Created folder: $OutputFolder" -ForegroundColor Green
+    Write-Host "   Created folder: $OutputFolder" -ForegroundColor Green
 } else {
-    Write-Host "  ✓ Using existing folder: $OutputFolder" -ForegroundColor Green
+    Write-Host "   Using existing folder: $OutputFolder" -ForegroundColor Green
 }
 
 # STAP 3: Export elke tabel
@@ -152,10 +152,10 @@ foreach ($table in $tables) {
         $exportResults += $result
         $totalRows += $result.RowCount
         
-        Write-Host "  ✓ Exported successfully" -ForegroundColor Green
+        Write-Host "   Exported successfully" -ForegroundColor Green
     }
     catch {
-        Write-Host "  ✗ Export failed: $_" -ForegroundColor Red
+        Write-Host "    Export failed: $_" -ForegroundColor Red
         $exportResults += [PSCustomObject]@{
             TableName = $tableName
             OutputPath = $outputPath
@@ -208,7 +208,7 @@ $metadata = [PSCustomObject]@{
 $metadataPath = Join-Path $OutputFolder "export-metadata.json"
 $metadata | ConvertTo-Json -Depth 5 | Out-File -FilePath $metadataPath -Encoding UTF8
 
-Write-Host "  ✓ Metadata saved to: $metadataPath" -ForegroundColor Green
+Write-Host "   Metadata saved to: $metadataPath" -ForegroundColor Green
 
 # STAP 6: Generate report (standaard enabled)
 if ($GenerateReport) {
@@ -261,7 +261,7 @@ if ($GenerateReport) {
             -OutputPath $ReportPath `
             -MigrationName "CSV Export: $Database"
         
-        Write-Host "  ✓ Report generated: $ReportPath" -ForegroundColor Green
+        Write-Host "   Report generated: $ReportPath" -ForegroundColor Green
     }
     catch {
         Write-Warning "Failed to generate report: $_"
@@ -271,12 +271,12 @@ if ($GenerateReport) {
 # FINAL SUMMARY
 if ($successCount -eq $tables.Count) {
     Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Green
-    Write-Host "║         ✓ Export Successful!                   ║" -ForegroundColor Green
+    Write-Host "║          Export Successful!                   ║" -ForegroundColor Green
     Write-Host "║   All tables exported to CSV                   ║" -ForegroundColor Green
     Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Green
 } else {
     Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Yellow
-    Write-Host "║      ⚠ Export Completed with Warnings          ║" -ForegroundColor Yellow
+    Write-Host "║       Export Completed with Warnings          ║" -ForegroundColor Yellow
     Write-Host "║   Some tables failed to export                 ║" -ForegroundColor Yellow
     Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Yellow
 }

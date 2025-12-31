@@ -96,7 +96,7 @@ $result = Convert-SqlServerToSQLite `
     -Database $SourceDatabase `
     -SQLitePath $SQLitePath
 
-Write-Host "✓ Migration completed" -ForegroundColor Green
+Write-Host " Migration completed" -ForegroundColor Green
 
 # Calculate execution time (totale script tijd)
 $endTime = Get-Date
@@ -133,7 +133,7 @@ $reportPath = ".\Reports\SqlServer_To_SQLite_$(Get-Date -Format 'yyyyMMdd_HHmmss
 try {
     $reportResult = Export-MigrationReport -MigrationResults $updatedResult -OutputPath $reportPath -MigrationName "SQL Server → SQLite"
     if ($reportResult -and $reportResult.Success) {
-        Write-Host "`n✓ Migration report created: $reportPath" -ForegroundColor Green
+        Write-Host "`n Migration report created: $reportPath" -ForegroundColor Green
     } elseif ($reportResult) {
         Write-Warning "Report generation indicated failure: $($reportResult.Error)"
     } else {
@@ -191,13 +191,13 @@ foreach ($table in $sourceTables) {
         }
         
         if ($match) {
-            Write-Host "  ✓ $table : $($sourcePK -join ', ')" -ForegroundColor Green
+            Write-Host "   $table : $($sourcePK -join ', ')" -ForegroundColor Green
         } else {
-            Write-Host "  ✗ $table : Expected [$($sourcePK -join ', ')] but got [$($sqlitePK -join ', ')]" -ForegroundColor Red
+            Write-Host "    $table : Expected [$($sourcePK -join ', ')] but got [$($sqlitePK -join ', ')]" -ForegroundColor Red
             $pkMismatches++
         }
     } else {
-        Write-Host "  ✗ $table : Expected $($sourcePK.Count) PK columns but got $($sqlitePK.Count)" -ForegroundColor Red
+        Write-Host "    $table : Expected $($sourcePK.Count) PK columns but got $($sqlitePK.Count)" -ForegroundColor Red
         $pkMismatches++
     }
 }
@@ -218,17 +218,17 @@ foreach ($table in $sourceTables) {
     
     if ($sqliteFKs) {
         if ($sqliteFKs.Count -eq $sourceFKList.Count) {
-            Write-Host "  ✓ $table : $($sqliteFKs.Count) FK(s)" -ForegroundColor Green
+            Write-Host "   $table : $($sqliteFKs.Count) FK(s)" -ForegroundColor Green
             
             foreach ($fk in $sqliteFKs) {
                 Write-Host "      $($fk.from) → $($fk.table)($($fk.to))" -ForegroundColor Gray
             }
         } else {
-            Write-Host "  ⚠ $table : Expected $($sourceFKList.Count) FK(s) but got $($sqliteFKs.Count)" -ForegroundColor Yellow
+            Write-Host "   $table : Expected $($sourceFKList.Count) FK(s) but got $($sqliteFKs.Count)" -ForegroundColor Yellow
             $fkMismatches++
         }
     } else {
-        Write-Host "  ✗ $table : Expected $($sourceFKList.Count) FK(s) but got 0" -ForegroundColor Red
+        Write-Host "    $table : Expected $($sourceFKList.Count) FK(s) but got 0" -ForegroundColor Red
         $fkMismatches++
         
         Write-Host "    Source FKs:" -ForegroundColor Gray
@@ -253,9 +253,9 @@ Write-Host "  - Source tables with FKs: $($sourceFKs.Count)" -ForegroundColor Gr
 Write-Host "  - Mismatches: $fkMismatches" -ForegroundColor $(if ($fkMismatches -eq 0) { "Green" } else { "Red" })
 
 if ($pkMismatches -eq 0 -and $fkMismatches -eq 0) {
-    Write-Host "`n✓ All constraints migrated correctly!" -ForegroundColor Green
+    Write-Host "`n All constraints migrated correctly!" -ForegroundColor Green
 } else {
-    Write-Host "`n✗ Some constraints were not migrated correctly" -ForegroundColor Red
+    Write-Host "`n  Some constraints were not migrated correctly" -ForegroundColor Red
 }
 
 # Herstel verbose preference

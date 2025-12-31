@@ -34,7 +34,7 @@ $metadataPath = Join-Path $CsvFolder "schema-metadata.json"
 $hasMetadata = Test-Path $metadataPath
 
 if ($hasMetadata) {
-    Write-Host "`n✓ Found schema-metadata.json - using metadata mode" -ForegroundColor Green
+    Write-Host "`n Found schema-metadata.json - using metadata mode" -ForegroundColor Green
     Write-Host "  This will automatically restore Primary Keys and Foreign Keys" -ForegroundColor Gray
     Write-Host "  (Auto-detect and manual parameters will be ignored)" -ForegroundColor DarkGray
     
@@ -50,7 +50,7 @@ END
 CREATE DATABASE [$DatabaseName];
 "@
     
-    Write-Host "  ✓ Database created" -ForegroundColor Green
+    Write-Host "   Database created" -ForegroundColor Green
     
     # Import met metadata - zonder automatisch rapport
     Write-Host "`n[STEP 2] Importing CSV files with metadata..." -ForegroundColor Yellow
@@ -101,16 +101,16 @@ CREATE DATABASE [$DatabaseName];
     Write-Host "Execution Time: $executionTimeString" -ForegroundColor Gray
     
     if ($importResult.Success) {
-        Write-Host "`n✓ Import completed successfully!" -ForegroundColor Green
+        Write-Host "`n Import completed successfully!" -ForegroundColor Green
         Write-Host "  All constraints (PKs and FKs) have been restored" -ForegroundColor Gray
     } else {
-        Write-Host "`n✗ Import completed with errors" -ForegroundColor Red
+        Write-Host "`n  Import completed with errors" -ForegroundColor Red
     }
     
     exit
 }
 
-Write-Host "`n⚠ No schema-metadata.json found - using auto-detect mode" -ForegroundColor Yellow
+Write-Host "`n No schema-metadata.json found - using auto-detect mode" -ForegroundColor Yellow
 Write-Host "  Constraints will be inferred from column names" -ForegroundColor Gray
 Write-Host "  Use Export.ps1 with -SaveSchemaMetadata to preserve exact schema" -ForegroundColor DarkGray
 
@@ -277,7 +277,7 @@ END
 CREATE DATABASE [$DatabaseName];
 "@
 
-Write-Host "  ✓ Database created" -ForegroundColor Green
+Write-Host "   Database created" -ForegroundColor Green
 
 # STAP 7: Import data
 Write-Host "`n[STEP 7] Importing CSV files to '$DatabaseName'..." -ForegroundColor Yellow
@@ -345,9 +345,9 @@ Write-Host "Total Rows    :  $($importResult.TotalRowsImported)" -ForegroundColo
 Write-Host "Execution Time: $executionTimeString" -ForegroundColor Gray
 
 if ($importResult.Success) {
-    Write-Host "`n✓ Import completed successfully!" -ForegroundColor Green
+    Write-Host "`n Import completed successfully!" -ForegroundColor Green
 } else {
-    Write-Host "`n✗ Import completed with errors" -ForegroundColor Red
+    Write-Host "`n  Import completed with errors" -ForegroundColor Red
 }
 
 # Herstel verbose preference

@@ -28,14 +28,14 @@ Write-Host "╚═════════════════════�
 
 # Check of SQLite database bestaat
 if (-not (Test-Path $SQLitePath)) {
-    Write-Host "✗ SQLite database not found: $SQLitePath" -ForegroundColor Red
+    Write-Host "  SQLite database not found: $SQLitePath" -ForegroundColor Red
     Write-Host "Run Test-SqliteConversion.ps1 first to create it" -ForegroundColor Yellow
     exit
 }
 
 # Check of het een bestand is en geen directory
 if ((Get-Item $SQLitePath) -is [System.IO.DirectoryInfo]) {
-    Write-Host "✗ Error: '$SQLitePath' is a directory, not a database file" -ForegroundColor Red
+    Write-Host "  Error: '$SQLitePath' is a directory, not a database file" -ForegroundColor Red
     
     # Zoek naar .db bestanden in de directory
     $dbFiles = Get-ChildItem -Path $SQLitePath -Filter "*.db" -File -ErrorAction SilentlyContinue
@@ -56,7 +56,7 @@ if ((Get-Item $SQLitePath) -is [System.IO.DirectoryInfo]) {
 
 # Check of het een .db bestand is
 if ($SQLitePath -notmatch '\.db$') {
-    Write-Host "⚠ Warning: File does not have .db extension: $SQLitePath" -ForegroundColor Yellow
+    Write-Host " Warning: File does not have .db extension: $SQLitePath" -ForegroundColor Yellow
     Write-Host "  Continuing anyway..." -ForegroundColor Gray
 }
 
@@ -104,7 +104,7 @@ $reportPath = ".\Reports\SQLite_To_SqlServer_$(Get-Date -Format 'yyyyMMdd_HHmmss
 try {
     $reportResult = Export-MigrationReport -MigrationResults $updatedResult -OutputPath $reportPath -MigrationName "SQLite → SQL Server"
     if ($reportResult -and $reportResult.Success) {
-        Write-Host "`n✓ Migration report created: $reportPath" -ForegroundColor Green
+        Write-Host "`n Migration report created: $reportPath" -ForegroundColor Green
     } elseif ($reportResult) {
         Write-Warning "Report generation indicated failure: $($reportResult.Error)"
     } else {
@@ -149,13 +149,13 @@ if ($result.Success) {
                 -Query "SELECT COUNT(*) as cnt FROM [$table]"
             
             $match = $sqliteCount.cnt -eq $sqlServerCount.cnt
-            $icon = if ($match) { "✓" } else { "✗" }
+            $icon = if ($match) { "" } else { " " }
             $color = if ($match) { "Green" } else { "Red" }
             
             Write-Host "  $icon $table : $($sqliteCount.cnt) → $($sqlServerCount.cnt)" -ForegroundColor $color
         }
         catch {
-            Write-Host "  ⚠ $table : Could not verify" -ForegroundColor Yellow
+            Write-Host "   $table : Could not verify" -ForegroundColor Yellow
         }
     }
     
@@ -176,7 +176,7 @@ ORDER BY o.OrderDate DESC
 "@
     
     $joinTest | Format-Table -AutoSize
-    Write-Host "✓ JOIN queries work correctly" -ForegroundColor Green
+    Write-Host " JOIN queries work correctly" -ForegroundColor Green
 }
 
 # Herstel verbose preference
