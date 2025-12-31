@@ -4,7 +4,7 @@ Database Migration Module - Complete database migration toolkit
 
 .DESCRIPTION
 This module provides all functionality for database migrations:
-- SQL Server ↔ SQLite conversion
+- SQL Server <-> SQLite conversion
 - CSV export/import
 - Database schema management
 
@@ -337,9 +337,9 @@ function Convert-SQLiteToSqlServer {
         try {
             $startTime = Get-Date
             
-            Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║     SQLite -> SQL Server Migration             ║" -ForegroundColor Cyan
-            Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+            Write-Host "`n==================================================" -ForegroundColor Cyan
+            Write-Host "|     SQLite -> SQL Server Migration             |" -ForegroundColor Cyan
+            Write-Host "==================================================" -ForegroundColor Cyan
             Write-Host "Source: $SQLitePath" -ForegroundColor Gray
             Write-Host "Target: $ServerInstance.$Database" -ForegroundColor Gray
 
@@ -560,9 +560,9 @@ CREATE DATABASE [$Database];
             Write-Host "`n[5/5] Verification..." -ForegroundColor Yellow
             Write-Host "Tables in SQL Server: $($Tables.Count)" -ForegroundColor Gray
 
-            Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║            MIGRATION SUMMARY                   ║" -ForegroundColor Cyan
-            Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+            Write-Host "`n==================================================" -ForegroundColor Cyan
+            Write-Host "|            MIGRATION SUMMARY                   |" -ForegroundColor Cyan
+            Write-Host "==================================================" -ForegroundColor Cyan
             Write-Host "Tables migrated: $($migrationResults.Count)" -ForegroundColor Gray
             Write-Host "Total rows: $totalRows" -ForegroundColor Gray
 
@@ -776,9 +776,9 @@ function Convert-SqlServerToSQLite {
         try {
             $startTime = Get-Date
             
-            Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║     SQL Server -> SQLite Migration             ║" -ForegroundColor Cyan
-            Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+            Write-Host "`n==================================================" -ForegroundColor Cyan
+            Write-Host "|     SQL Server -> SQLite Migration             |" -ForegroundColor Cyan
+            Write-Host "==================================================" -ForegroundColor Cyan
             Write-Host "Source: $ServerInstance.$Database" -ForegroundColor Gray
             Write-Host "Target: $SQLitePath" -ForegroundColor Gray
             
@@ -996,9 +996,9 @@ WHERE t.name = '$tableName'
             $sqliteTables = Invoke-SqliteQuery -DataSource $SQLitePath -Query "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name" | Select-Object -ExpandProperty name
             Write-Host "Tables in SQLite: $($sqliteTables.Count)" -ForegroundColor Gray
             
-            Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║            MIGRATION SUMMARY                   ║" -ForegroundColor Cyan
-            Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+            Write-Host "`n==================================================" -ForegroundColor Cyan
+            Write-Host "|            MIGRATION SUMMARY                   |" -ForegroundColor Cyan
+            Write-Host "==================================================" -ForegroundColor Cyan
             Write-Host "Tables migrated: $($migrationResults.Count)" -ForegroundColor Gray
             Write-Host "Total rows: $totalRows" -ForegroundColor Gray
             Write-Host "SQLite file: $SQLitePath" -ForegroundColor Gray
@@ -1098,9 +1098,9 @@ function Export-DatabaseSchemaToCsv {
     
     process {
         try {
-            Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║     Database -> CSV Export with Metadata       ║" -ForegroundColor Cyan
-            Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+            Write-Host "`n==================================================" -ForegroundColor Cyan
+            Write-Host "|     Database -> CSV Export with Metadata       |" -ForegroundColor Cyan
+            Write-Host "==================================================" -ForegroundColor Cyan
             
             # Create output folder
             if (-not (Test-Path $OutputFolder)) {
@@ -1346,9 +1346,9 @@ WHERE t.name = '$tableName'
             $metadata | ConvertTo-Json -Depth 10 | Set-Content -Path $metadataPath -Encoding UTF8
             Write-Host "`n Schema metadata saved to schema-metadata.json" -ForegroundColor Green
             
-            Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║              EXPORT SUMMARY                    ║" -ForegroundColor Cyan
-            Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+            Write-Host "`n==================================================" -ForegroundColor Cyan
+            Write-Host "|              EXPORT SUMMARY                    |" -ForegroundColor Cyan
+            Write-Host "==================================================" -ForegroundColor Cyan
             Write-Host "Tables exported: $($Tables.Count)" -ForegroundColor Gray
             Write-Host "Output folder: $OutputFolder" -ForegroundColor Gray
             Write-Host "Metadata file: schema-metadata.json" -ForegroundColor Gray
@@ -1399,9 +1399,9 @@ function Export-DatabaseSchemaToMarkdown {
     
     process {
         try {
-            Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║   Database Schema -> Markdown Documentation    ║" -ForegroundColor Cyan
-            Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+            Write-Host "`n==================================================" -ForegroundColor Cyan
+            Write-Host "|   Database Schema -> Markdown Documentation    |" -ForegroundColor Cyan
+            Write-Host "==================================================" -ForegroundColor Cyan
             
             # Get all tables if not specified
             if ($Tables.Count -eq 0) {
@@ -1751,9 +1751,9 @@ function Export-SqlTableToCsv {
             Write-Verbose "Found $($data.Count) rows"
             
             if ($InteractiveMapping) {
-                Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-                Write-Host "║     Interactive Header Mapping - $TableName" -ForegroundColor Cyan
-                Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+                Write-Host "`n==================================================" -ForegroundColor Cyan
+                Write-Host "|     Interactive Header Mapping - $TableName" -ForegroundColor Cyan
+                Write-Host "==================================================" -ForegroundColor Cyan
                 Write-Host "Press ENTER to keep original name, or type new name" -ForegroundColor Gray
                 Write-Host ""
                 
@@ -2383,9 +2383,9 @@ function Import-DatabaseFromCsv {
             $useMetadata = Test-Path $metadataPath
             
             if ($useMetadata) {
-                Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-                Write-Host "║   CSV Import with Metadata (Schema Preserved) ║" -ForegroundColor Cyan
-                Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+                Write-Host "`n==================================================" -ForegroundColor Cyan
+                Write-Host "|   CSV Import with Metadata (Schema Preserved) |" -ForegroundColor Cyan
+                Write-Host "==================================================" -ForegroundColor Cyan
                 Write-Host " Found schema-metadata.json - using stored schema" -ForegroundColor Green
                 
                 $metadata = Get-Content $metadataPath -Raw | ConvertFrom-Json
@@ -2425,9 +2425,9 @@ function Import-DatabaseFromCsv {
                 Write-Host "  - Primary Keys: $($PrimaryKeys.Count)" -ForegroundColor Gray
                 Write-Host "  - Foreign Keys: $($ForeignKeys.Count)" -ForegroundColor Gray
             } else {
-                Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-                Write-Host "║      CSV Import without Metadata               ║" -ForegroundColor Cyan
-                Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+                Write-Host "`n==================================================" -ForegroundColor Cyan
+                Write-Host "|      CSV Import without Metadata               |" -ForegroundColor Cyan
+                Write-Host "==================================================" -ForegroundColor Cyan
                 Write-Host " No schema-metadata.json found - constraints may be lost" -ForegroundColor Yellow
             }
             
@@ -2723,9 +2723,9 @@ function Export-MigrationReport {
             
             Import-Module ImportExcel -ErrorAction Stop
             
-            Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║        Creating Migration Report              ║" -ForegroundColor Cyan
-            Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+            Write-Host "`n==================================================" -ForegroundColor Cyan
+            Write-Host "|        Creating Migration Report              |" -ForegroundColor Cyan
+            Write-Host "==================================================" -ForegroundColor Cyan
             
             # Ensure output directory exists
             $outputDir = Split-Path -Path $OutputPath -Parent
@@ -2766,7 +2766,7 @@ function Export-MigrationReport {
             $tablesProcessed = if ($MigrationResults.TablesProcessed) { $MigrationResults.TablesProcessed } elseif ($MigrationResults['TablesProcessed']) { $MigrationResults['TablesProcessed'] } else { $null }
             
             if ($sqlitePath) {
-                $migrationType = "SQL Server ↔ SQLite"
+                $migrationType = "SQL Server <-> SQLite"
             } elseif ($tablesProcessed) {
                 $migrationType = "CSV Import"
             } elseif ($results -and $results.Count -gt 0) {
@@ -3017,7 +3017,7 @@ function Export-MigrationReport {
 
 # Export all public functions
 Export-ModuleMember -Function @(
-    # SQLite ↔ SQL Server
+    # SQLite <-> SQL Server
     'Convert-SQLiteToSqlServer',
     'Convert-SqlServerToSQLite',
     # CSV Operations
@@ -3036,3 +3036,4 @@ Export-ModuleMember -Function @(
     'ConvertTo-SqlServerDataType',
     'Get-TableDependencyOrder'
 )
+
