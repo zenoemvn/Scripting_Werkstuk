@@ -2841,7 +2841,14 @@ function Export-MigrationReport {
                     # Handle both PSCustomObject and OrderedDictionary
                     $tableName = if ($result.TableName) { $result.TableName } elseif ($result['TableName']) { $result['TableName'] } else { "Unknown" }
                     $success = if ($null -ne $result.Success) { $result.Success } elseif ($null -ne $result['Success']) { $result['Success'] } else { $false }
-                    $error = if ($result.Error) { $result.Error } elseif ($result['Error']) { $result['Error'] } else { "" }
+                    
+                    # Get error message (avoid using 'Error' property name to prevent PSScriptAnalyzer warnings)
+                    $errorMsg = ""
+                    if ($result.PSObject.Properties.Name -contains 'Error' -and $result.Error) {
+                        $errorMsg = $result.Error
+                    } elseif ($result -is [System.Collections.Specialized.OrderedDictionary] -and $result.Contains('Error')) {
+                        $errorMsg = $result['Error']
+                    }
                     
                     $rowCount = if ($result.RowsMigrated) { $result.RowsMigrated } 
                                 elseif ($result['RowsMigrated']) { $result['RowsMigrated'] }
@@ -2875,7 +2882,7 @@ function Export-MigrationReport {
                         'Checksum Valid' = if ($null -ne $checksumMatch) { 
                             if ($checksumMatch) { " Yes" } else { "  No" }
                         } else { "N/A" }
-                        'Error Message' = $error
+                        'Error Message' = $errorMsg
                     }
                 }
                 
@@ -2888,20 +2895,27 @@ function Export-MigrationReport {
             
             # 3. ERRORS SHEET (only if errors exist)
             $errors = @()
-            
+        
             # Collect errors from Results
             if ($results) {
                 foreach ($result in $results) {
                     # Handle both PSCustomObject and OrderedDictionary
                     $tableName = if ($result.TableName) { $result.TableName } elseif ($result['TableName']) { $result['TableName'] } else { "Unknown" }
                     $success = if ($null -ne $result.Success) { $result.Success } elseif ($null -ne $result['Success']) { $result['Success'] } else { $false }
-                    $error = if ($result.Error) { $result.Error } elseif ($result['Error']) { $result['Error'] } else { $null }
                     
-                    if (-not $success -and $error) {
+                    # Get error message (avoid using 'Error' property name to prevent PSScriptAnalyzer warnings)
+                    $errorMsg = $null
+                    if ($result.PSObject.Properties.Name -contains 'Error' -and $result.Error) {
+                        $errorMsg = $result.Error
+                    } elseif ($result -is [System.Collections.Specialized.OrderedDictionary] -and $result.Contains('Error')) {
+                        $errorMsg = $result['Error']
+                    }
+                    
+                    if (-not $success -and $errorMsg) {
                         $errors += [PSCustomObject]@{
                             'Table Name' = $tableName
                             'Error Type' = 'Migration Error'
-                            'Error Message' = $error
+                            'Error Message' = $errorMsg
                             'Timestamp' = $timestamp.ToString("yyyy-MM-dd HH:mm:ss")
                         }
                     }
@@ -2936,17 +2950,17 @@ function Export-MigrationReport {
                 
                 try {
                     $excel = Open-ExcelPackage -Path $OutputPath
-                    $summarySheet = $excel.Workbook.Worksheets['Summary']
+                    $null = $excel.Workbook.Worksheets['Summary']
                     
                     # Success/Failure Pie Chart
-                    $chartData = @(
+                    $null = @(
                         [PSCustomObject]@{ Category = 'Successful'; Count = $successfulTables }
                         [PSCustomObject]@{ Category = 'Failed'; Count = $failedTables }
                     )
                     
                     # Only add chart if there's data
                     if ($successfulTables -gt 0 -or $failedTables -gt 0) {
-                        $chart = New-ExcelChartDefinition -Title "Migration Results" -ChartType Pie `
+                        $null = New-ExcelChartDefinition -Title "Migration Results" -ChartType Pie `
                             -XRange "Category" -YRange "Count" -Column 8 -ColumnOffsetPixels 10 `
                             -Row 2 -RowOffsetPixels 10 -Width 400 -Height 300
                         
