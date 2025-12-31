@@ -23,7 +23,7 @@ $oldVerbose = $VerbosePreference
 $VerbosePreference = 'SilentlyContinue'
 
 Write-Host "╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║     SQLite → SQL Server Migration Test        ║" -ForegroundColor Cyan
+Write-Host "║     SQLite -> SQL Server Migration Test        ║" -ForegroundColor Cyan
 Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
 
 # Check of SQLite database bestaat
@@ -102,7 +102,7 @@ $VerbosePreference = $oldVerbose
 
 $reportPath = ".\Reports\SQLite_To_SqlServer_$(Get-Date -Format 'yyyyMMdd_HHmmss').xlsx"
 try {
-    $reportResult = Export-MigrationReport -MigrationResults $updatedResult -OutputPath $reportPath -MigrationName "SQLite → SQL Server"
+    $reportResult = Export-MigrationReport -MigrationResults $updatedResult -OutputPath $reportPath -MigrationName "SQLite -> SQL Server"
     if ($reportResult -and $reportResult.Success) {
         Write-Host "`n Migration report created: $reportPath" -ForegroundColor Green
     } elseif ($reportResult) {
@@ -152,7 +152,7 @@ if ($result.Success) {
             $icon = if ($match) { "" } else { " " }
             $color = if ($match) { "Green" } else { "Red" }
             
-            Write-Host "  $icon $table : $($sqliteCount.cnt) → $($sqlServerCount.cnt)" -ForegroundColor $color
+            Write-Host "  $icon $table : $($sqliteCount.cnt) -> $($sqlServerCount.cnt)" -ForegroundColor $color
         }
         catch {
             Write-Host "   $table : Could not verify" -ForegroundColor Yellow

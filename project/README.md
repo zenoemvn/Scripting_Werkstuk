@@ -402,7 +402,7 @@ Export-SqlTableToCsv `
 #### Scenario 4: Roundtrip Testing (Validatie)
 
 ```powershell
-# Test de complete cyclus: SQL Server → SQLite → SQL Server
+# Test de complete cyclus: SQL Server -> SQLite -> SQL Server
 .\SQLiteRoundtrip.ps1
 
 ```
@@ -549,8 +549,8 @@ project/
 │       └── SQLiteHelper.ps1             # SQLite utility functies
 │
 ├── Tests/                                # Pester test suites
-│   ├── Convert-SQLiteToSqlServer.Tests.ps1    # SQLite → SQL tests
-│   ├── Convert-SqlServerToSQLite.Tests.ps1    # SQL → SQLite tests
+│   ├── Convert-SQLiteToSqlServer.Tests.ps1    # SQLite -> SQL tests
+│   ├── Convert-SqlServerToSQLite.Tests.ps1    # SQL -> SQLite tests
 │   ├── Export-SqlTableToCsv.Tests.ps1         # Export tests
 │   ├── Import-CsvToSqlTable.Tests.ps1         # Import tests
 │   ├── Import-Database.Tests.ps1              # Database import tests
@@ -612,8 +612,8 @@ De `DatabaseMigration.psm1` module exporteert **13 hoofdfuncties** verdeeld over
 
 | Functie | Input | Output | Doel |
 |---------|-------|--------|------|
-| `Convert-SQLiteToSqlServer` | SQLite DB | SQL Server DB | Migreer SQLite → SQL Server met FK support |
-| `Convert-SqlServerToSQLite` | SQL Server DB | SQLite DB | Migreer SQL Server → SQLite met type conversie |
+| `Convert-SQLiteToSqlServer` | SQLite DB | SQL Server DB | Migreer SQLite -> SQL Server met FK support |
+| `Convert-SqlServerToSQLite` | SQL Server DB | SQLite DB | Migreer SQL Server -> SQLite met type conversie |
 
 #### 2. CSV Operations (Export/Import)
 
@@ -642,8 +642,8 @@ De `DatabaseMigration.psm1` module exporteert **13 hoofdfuncties** verdeeld over
 
 | Functie | Input | Output | Doel |
 |---------|-------|--------|------|
-| `ConvertTo-SQLiteDataType` | SQL Server type | SQLite type | Type conversie SQL → SQLite |
-| `ConvertTo-SqlServerDataType` | SQLite type | SQL Server type | Type conversie SQLite → SQL |
+| `ConvertTo-SQLiteDataType` | SQL Server type | SQLite type | Type conversie SQL -> SQLite |
+| `ConvertTo-SqlServerDataType` | SQLite type | SQL Server type | Type conversie SQLite -> SQL |
 | `Get-TableDependencyOrder` | Metadata JSON | Ordered table list | Topologische sortering voor FK's |
 
 ### Technische Architectuur Beslissingen
@@ -659,8 +659,8 @@ De `DatabaseMigration.psm1` module exporteert **13 hoofdfuncties** verdeeld over
 - Duidelijke API: 13 exported functies met duidelijke namen
 
 **Alternatieven overwogen:**
-- ❌ Meerdere modules per functionaliteit → Te complex voor het projectomvang
-- ❌ Losse scripts zonder module → Moeilijk herbruikbaar
+- ❌ Meerdere modules per functionaliteit -> Te complex voor het projectomvang
+- ❌ Losse scripts zonder module -> Moeilijk herbruikbaar
 
 #### 2. CSV als Tussenformaat
 
@@ -757,9 +757,9 @@ if ($UseTransaction) {
 
 **Algoritme:**
 ```
-1. Bouw dependency graph: Table → [Referenced Tables]
+1. Bouw dependency graph: Table -> [Referenced Tables]
 2. Topological sort met Kahn's algoritme
-3. Detecteer circular dependencies → Error
+3. Detecteer circular dependencies -> Error
 4. Return gesorteerde lijst: [Parents first ... Children last]
 ```
 
@@ -857,7 +857,7 @@ Source Database (SQLite or SQL Server)
 | CSV Import | 10,000 rijen | 85s | 1s | 85x |
 | CSV Import | 100,000 rijen | ~15 min | 12s | 75x |
 | CSV Import | 1,000,000 rijen | N/A (timeout) | 2 min | ∞ |
-| SQLite → SQL | 50,000 rijen | N/A | 8s | - |
+| SQLite -> SQL | 50,000 rijen | N/A | 8s | - |
 | Checksum | 100,000 rijen | N/A | 3s | - |
 | Schema Export | 20 tables | N/A | < 1s | - |
 

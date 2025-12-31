@@ -1,4 +1,4 @@
-# Test complete roundtrip: SQL Server → SQLite → SQL Server
+# Test complete roundtrip: SQL Server -> SQLite -> SQL Server
 # Verificatie dat alle PKs en FKs behouden blijven
 
 [CmdletBinding()]
@@ -24,8 +24,8 @@ Write-Host "╚═════════════════════�
 
 Import-Module ".\Modules\DatabaseMigration.psm1" -Force
 
-# PHASE 1: SQL Server → SQLite
-Write-Host "`n[PHASE 1/2] SQL Server → SQLite" -ForegroundColor Yellow
+# PHASE 1: SQL Server -> SQLite
+Write-Host "`n[PHASE 1/2] SQL Server -> SQLite" -ForegroundColor Yellow
 Write-Host "Source: $ServerInstance.$SourceDatabase" -ForegroundColor Gray
 Write-Host "Target: $SQLitePath" -ForegroundColor Gray
 
@@ -43,8 +43,8 @@ Write-Host "`n⏸  Pausing to inspect SQLite database..." -ForegroundColor Yello
 Write-Host "SQLite file: $SQLitePath" -ForegroundColor Gray
 Write-Host "Size: $([math]::Round((Get-Item $SQLitePath).Length / 1KB, 2)) KB" -ForegroundColor Gray
 
-# PHASE 2: SQLite → SQL Server
-Write-Host "`n[PHASE 2/2] SQLite → SQL Server" -ForegroundColor Yellow
+# PHASE 2: SQLite -> SQL Server
+Write-Host "`n[PHASE 2/2] SQLite -> SQL Server" -ForegroundColor Yellow
 Write-Host "Source: $SQLitePath" -ForegroundColor Gray
 Write-Host "Target: $ServerInstance.$TargetDatabase" -ForegroundColor Gray
 
@@ -67,7 +67,7 @@ $tables = Invoke-Sqlcmd -ServerInstance $ServerInstance `
 
 $allMatch = $true
 
-Write-Host "`nComparing: $SourceDatabase → SQLite → $TargetDatabase" -ForegroundColor Yellow
+Write-Host "`nComparing: $SourceDatabase -> SQLite -> $TargetDatabase" -ForegroundColor Yellow
 Write-Host ("{0,-20} {1,10} {2,10} {3,10}" -f "Table", "Original", "SQLite", "Final") -ForegroundColor Cyan
 Write-Host ("-" * 55) -ForegroundColor Gray
 

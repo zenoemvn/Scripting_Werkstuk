@@ -32,7 +32,7 @@ if (-not (Test-Path $reportFolder)) {
     New-Item -Path $reportFolder -ItemType Directory -Force | Out-Null
 }
 
-# Option 1: SQL Server → SQLite Migration Report
+# Option 1: SQL Server -> SQLite Migration Report
 Write-Host "`n=== Demo 1: SQL Server to SQLite Migration ===" -ForegroundColor Yellow
 
 if ($CreateTestData) {
@@ -81,7 +81,7 @@ INSERT INTO Orders (CustomerID, OrderDate, Total) VALUES
 }
 
 # Perform SQLite migration
-Write-Host "`nPerforming SQL Server → SQLite migration..." -ForegroundColor Cyan
+Write-Host "`nPerforming SQL Server -> SQLite migration..." -ForegroundColor Cyan
 $sqliteResult = Convert-SqlServerToSQLite `
     -ServerInstance $ServerInstance `
     -Database "MigrationDemo" `
@@ -101,10 +101,10 @@ if ($report1.Success) {
     Write-Host "  - Failed: $($report1.FailedTables)" -ForegroundColor $(if ($report1.FailedTables -gt 0) { "Red" } else { "Gray" })
 }
 
-# Option 2: SQLite → SQL Server Migration Report (with validation)
+# Option 2: SQLite -> SQL Server Migration Report (with validation)
 Write-Host "`n=== Demo 2: SQLite to SQL Server Migration (with Checksum Validation) ===" -ForegroundColor Yellow
 
-Write-Host "Performing SQLite → SQL Server migration with validation..." -ForegroundColor Cyan
+Write-Host "Performing SQLite -> SQL Server migration with validation..." -ForegroundColor Cyan
 $sqlServerResult = Convert-SQLiteToSqlServer `
     -SQLitePath ".\data\MigrationDemo.db" `
     -ServerInstance $ServerInstance `

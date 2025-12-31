@@ -169,9 +169,9 @@ foreach ($tableName in $tableInfo.Keys) {
     
     if ($pkColumn) {
         $primaryKeys[$tableName] = $pkColumn
-        Write-Host "  $tableName → PK: $pkColumn" -ForegroundColor Green
+        Write-Host "  $tableName -> PK: $pkColumn" -ForegroundColor Green
     } else {
-        Write-Host "  $tableName → No PK detected" -ForegroundColor Yellow
+        Write-Host "  $tableName -> No PK detected" -ForegroundColor Yellow
     }
 }
 
@@ -200,7 +200,7 @@ if ($AutoDetectRelations) {
                             ToTable = $otherTable
                             ToColumn = $column
                         }
-                        Write-Host "  $fkName : $tableName.$column → $otherTable.$column" -ForegroundColor Green
+                        Write-Host "  $fkName : $tableName.$column -> $otherTable.$column" -ForegroundColor Green
                         break
                     }
                 }

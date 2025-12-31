@@ -338,7 +338,7 @@ function Convert-SQLiteToSqlServer {
             $startTime = Get-Date
             
             Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║     SQLite → SQL Server Migration             ║" -ForegroundColor Cyan
+            Write-Host "║     SQLite -> SQL Server Migration             ║" -ForegroundColor Cyan
             Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
             Write-Host "Source: $SQLitePath" -ForegroundColor Gray
             Write-Host "Target: $ServerInstance.$Database" -ForegroundColor Gray
@@ -365,7 +365,7 @@ function Convert-SQLiteToSqlServer {
 
             Write-Host "Tables to migrate: $($Tables -join ', ')" -ForegroundColor Gray
             Write-Host "Found $($Tables.Count) tables to migrate" -ForegroundColor Gray
-            Write-Host "Migration order: $($Tables -join ' → ')" -ForegroundColor DarkGray
+            Write-Host "Migration order: $($Tables -join ' -> ')" -ForegroundColor DarkGray
 
             Write-Host "`n[2/5] Creating SQL Server database..." -ForegroundColor Yellow
             $createDbQuery = @"
@@ -612,7 +612,7 @@ CREATE DATABASE [$Database];
                     Export-MigrationReport `
                         -MigrationResults $migrationResult `
                         -OutputPath $ReportPath `
-                        -MigrationName "SQLite → SQL Server: $Database"
+                        -MigrationName "SQLite -> SQL Server: $Database"
                 }
                 catch {
                     Write-Warning "Failed to generate migration report: $_"
@@ -777,7 +777,7 @@ function Convert-SqlServerToSQLite {
             $startTime = Get-Date
             
             Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║     SQL Server → SQLite Migration             ║" -ForegroundColor Cyan
+            Write-Host "║     SQL Server -> SQLite Migration             ║" -ForegroundColor Cyan
             Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
             Write-Host "Source: $ServerInstance.$Database" -ForegroundColor Gray
             Write-Host "Target: $SQLitePath" -ForegroundColor Gray
@@ -794,7 +794,7 @@ function Convert-SqlServerToSQLite {
             Write-Host "Found $($Tables.Count) tables" -ForegroundColor Gray
             
             $sortedTables = Get-TableDependencyOrder -ServerInstance $ServerInstance -Database $Database -Tables $Tables
-            Write-Host "Migration order: $($sortedTables -join ' → ')" -ForegroundColor DarkGray
+            Write-Host "Migration order: $($sortedTables -join ' -> ')" -ForegroundColor DarkGray
             
             Write-Host "`n[2/4] Creating SQLite database..." -ForegroundColor Yellow
             if (Test-Path $SQLitePath) {
@@ -1057,7 +1057,7 @@ WHERE t.name = '$tableName'
                     Export-MigrationReport `
                         -MigrationResults $migrationResult `
                         -OutputPath $ReportPath `
-                        -MigrationName "SQL Server → SQLite: $Database"
+                        -MigrationName "SQL Server -> SQLite: $Database"
                 }
                 catch {
                     Write-Warning "Failed to generate migration report: $_"
@@ -1099,7 +1099,7 @@ function Export-DatabaseSchemaToCsv {
     process {
         try {
             Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║     Database → CSV Export with Metadata       ║" -ForegroundColor Cyan
+            Write-Host "║     Database -> CSV Export with Metadata       ║" -ForegroundColor Cyan
             Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
             
             # Create output folder
@@ -1400,7 +1400,7 @@ function Export-DatabaseSchemaToMarkdown {
     process {
         try {
             Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-            Write-Host "║   Database Schema → Markdown Documentation    ║" -ForegroundColor Cyan
+            Write-Host "║   Database Schema -> Markdown Documentation    ║" -ForegroundColor Cyan
             Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
             
             # Get all tables if not specified
@@ -1767,9 +1767,9 @@ function Export-SqlTableToCsv {
                     
                     if (-not [string]::IsNullOrWhiteSpace($newName)) {
                         $HeaderMapping[$columnName] = $newName.Trim()
-                        Write-Host "    → Mapped to: $($newName.Trim())" -ForegroundColor Green
+                        Write-Host "    -> Mapped to: $($newName.Trim())" -ForegroundColor Green
                     } else {
-                        Write-Host "    → Keeping: $columnName" -ForegroundColor Gray
+                        Write-Host "    -> Keeping: $columnName" -ForegroundColor Gray
                     }
                 }
                 
@@ -1781,7 +1781,7 @@ function Export-SqlTableToCsv {
                 
                 Write-Host "`nApplying header mapping:" -ForegroundColor Cyan
                 foreach ($key in $HeaderMapping.Keys) {
-                    Write-Host "  $key → $($HeaderMapping[$key])" -ForegroundColor Gray
+                    Write-Host "  $key -> $($HeaderMapping[$key])" -ForegroundColor Gray
                 }
                 
                 $mappedData = foreach ($row in $data) {
@@ -2315,7 +2315,7 @@ WHERE [$columnName] IS NOT NULL
                                 ToColumn = $refPkColumn
                             }
                             
-                            Write-Host "     $tableName.$columnName → $refTableName.$refPkColumn" -ForegroundColor Green
+                            Write-Host "     $tableName.$columnName -> $refTableName.$refPkColumn" -ForegroundColor Green
                         }
                     }
                 }

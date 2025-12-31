@@ -19,7 +19,7 @@ $ErrorActionPreference = "Stop"
 $startTime = Get-Date
 
 Write-Host "╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║   SQL Server → SQLite Migration Test          ║" -ForegroundColor Cyan
+Write-Host "║   SQL Server -> SQLite Migration Test          ║" -ForegroundColor Cyan
 Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
 
 Import-Module ".\Modules\DatabaseMigration.psm1" -Force
@@ -131,7 +131,7 @@ $VerbosePreference = $oldVerbose
 
 $reportPath = ".\Reports\SqlServer_To_SQLite_$(Get-Date -Format 'yyyyMMdd_HHmmss').xlsx"
 try {
-    $reportResult = Export-MigrationReport -MigrationResults $updatedResult -OutputPath $reportPath -MigrationName "SQL Server → SQLite"
+    $reportResult = Export-MigrationReport -MigrationResults $updatedResult -OutputPath $reportPath -MigrationName "SQL Server -> SQLite"
     if ($reportResult -and $reportResult.Success) {
         Write-Host "`n Migration report created: $reportPath" -ForegroundColor Green
     } elseif ($reportResult) {
@@ -221,7 +221,7 @@ foreach ($table in $sourceTables) {
             Write-Host "   $table : $($sqliteFKs.Count) FK(s)" -ForegroundColor Green
             
             foreach ($fk in $sqliteFKs) {
-                Write-Host "      $($fk.from) → $($fk.table)($($fk.to))" -ForegroundColor Gray
+                Write-Host "      $($fk.from) -> $($fk.table)($($fk.to))" -ForegroundColor Gray
             }
         } else {
             Write-Host "   $table : Expected $($sourceFKList.Count) FK(s) but got $($sqliteFKs.Count)" -ForegroundColor Yellow
@@ -233,7 +233,7 @@ foreach ($table in $sourceTables) {
         
         Write-Host "    Source FKs:" -ForegroundColor Gray
         foreach ($fk in $sourceFKList) {
-            Write-Host "      $($fk.ColumnName) → $($fk.ReferencedTable)($($fk.ReferencedColumn))" -ForegroundColor Gray
+            Write-Host "      $($fk.ColumnName) -> $($fk.ReferencedTable)($($fk.ReferencedColumn))" -ForegroundColor Gray
         }
     }
 }

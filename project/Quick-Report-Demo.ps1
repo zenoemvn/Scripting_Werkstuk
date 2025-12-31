@@ -32,7 +32,7 @@ if (-not (Test-Path $testDbPath)) {
 }
 
 # Perform migration
-Write-Host "`nPerforming SQLite → SQL Server migration..." -ForegroundColor Cyan
+Write-Host "`nPerforming SQLite -> SQL Server migration..." -ForegroundColor Cyan
 $migrationResult = Convert-SQLiteToSqlServer `
     -SQLitePath $testDbPath `
     -ServerInstance $ServerInstance `

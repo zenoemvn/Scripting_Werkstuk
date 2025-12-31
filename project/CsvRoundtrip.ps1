@@ -1,4 +1,4 @@
-# Test: SQL Server → CSV → SQL Server (met behoud van schema)
+# Test: SQL Server -> CSV -> SQL Server (met behoud van schema)
 # Dit script test of Primary Keys en Foreign Keys behouden blijven
 
 [CmdletBinding()]
@@ -55,7 +55,7 @@ foreach ($tableName in $metadata.Tables.PSObject.Properties.Name) {
     
     if ($table.ForeignKeys -and $table.ForeignKeys.Count -gt 0) {
         foreach ($fk in $table.ForeignKeys) {
-            Write-Host "    FK: $($fk.Column) → $($fk.ReferencedTable).$($fk.ReferencedColumn)" -ForegroundColor Yellow
+            Write-Host "    FK: $($fk.Column) -> $($fk.ReferencedTable).$($fk.ReferencedColumn)" -ForegroundColor Yellow
         }
     }
 }
@@ -147,7 +147,7 @@ foreach ($table in $tables) {
     $status = if ($sourceCount -eq $targetCount) { "" } else { " " }
     $color = if ($sourceCount -eq $targetCount) { "Green" } else { "Red" }
     
-    Write-Host "  $status $table : $sourceCount → $targetCount" -ForegroundColor $color
+    Write-Host "  $status $table : $sourceCount -> $targetCount" -ForegroundColor $color
 }
 
 # Summary

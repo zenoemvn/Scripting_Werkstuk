@@ -6,7 +6,7 @@ if (-not (Get-Command -Name Invoke-SqliteQuery -ErrorAction SilentlyContinue)) {
 Import-Module ".\Modules\DatabaseMigration.psm1" -Force
 
 Write-Host "╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║     SQL Server → SQLite Migration Test         ║" -ForegroundColor Cyan
+Write-Host "║     SQL Server -> SQLite Migration Test         ║" -ForegroundColor Cyan
 Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
 
 # Parameters
@@ -49,7 +49,7 @@ if ($result.Success) {
             $hasForeignKeys = $true
             Write-Host "`n  Table: $table" -ForegroundColor Cyan
             foreach ($fk in $fks) {
-                Write-Host "     $($fk.from) → $($fk.table)($($fk.to))" -ForegroundColor Green
+                Write-Host "     $($fk.from) -> $($fk.table)($($fk.to))" -ForegroundColor Green
             }
         }
     }
