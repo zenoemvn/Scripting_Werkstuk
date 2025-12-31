@@ -19,7 +19,13 @@ param(
     [string[]]$ExcludeTables = @('sysdiagrams')
 )
 
-$ErrorActionPreference = "Stop"
+# Standaard rapport genereren (kan disabled worden met -GenerateReport:$false)
+if (-not $PSBoundParameters.ContainsKey('GenerateReport')) {
+    $GenerateReport = $true
+}
+
+# Start time tracking voor execution time
+$startTime = Get-Date
 
 Write-Host "╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "║     Export All Tables from Database            ║" -ForegroundColor Cyan
@@ -204,6 +210,65 @@ $metadata | ConvertTo-Json -Depth 5 | Out-File -FilePath $metadataPath -Encoding
 
 Write-Host "  ✓ Metadata saved to: $metadataPath" -ForegroundColor Green
 
+# STAP 6: Generate report (standaard enabled)
+if ($GenerateReport) {
+    Write-Host "`n[STEP 6] Generating Excel Report..." -ForegroundColor Yellow
+    
+    # Calculate execution time
+    $endTime = Get-Date
+    $executionTime = ($endTime - $startTime)
+    
+    # Format tijd afhankelijk van duur
+    if ($executionTime.TotalSeconds -lt 1) {
+        $executionTimeString = "{0:0.000} seconds" -f $executionTime.TotalSeconds
+    } elseif ($executionTime.TotalMinutes -lt 1) {
+        $executionTimeString = "{0:0.00} seconds" -f $executionTime.TotalSeconds
+    } else {
+        $executionTimeString = "{0:hh\:mm\:ss}" -f $executionTime
+    }
+    
+    Write-Host "Execution time: $executionTimeString" -ForegroundColor Gray
+    
+    if (-not $ReportPath) {
+        $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+        $ReportPath = ".\Reports\Export_Report_$timestamp.xlsx"
+    }
+    
+    # Create migration-style result object
+    $exportResult = [PSCustomObject]@{
+        Success = ($successCount -eq $tables.Count)
+        Results = $exportResults | ForEach-Object {
+            [PSCustomObject]@{
+                TableName = $_.TableName
+                Success = $_.Success
+                RowsMigrated = $_.RowCount
+                Error = $_.Error
+            }
+        }
+        TotalRows = $totalRows
+        TablesProcessed = $tables.Count
+        PrimaryKeysAdded = 0
+        ForeignKeysAdded = 0
+        StartTime = $startTime
+        EndTime = $endTime
+        ExecutionTime = $executionTime
+        ExecutionTimeFormatted = $executionTimeString
+    }
+    
+    try {
+        Export-MigrationReport `
+            -MigrationResults $exportResult `
+            -OutputPath $ReportPath `
+            -MigrationName "CSV Export: $Database"
+        
+        Write-Host "  ✓ Report generated: $ReportPath" -ForegroundColor Green
+    }
+    catch {
+        Write-Warning "Failed to generate report: $_"
+    }
+}
+
+# FINAL SUMMARY
 if ($successCount -eq $tables.Count) {
     Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Green
     Write-Host "║         ✓ Export Successful!                   ║" -ForegroundColor Green

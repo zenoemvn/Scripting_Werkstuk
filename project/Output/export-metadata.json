@@ -1,0 +1,40 @@
+{
+  "ExportDate": "2025-12-23 13:54:10",
+  "Database": "SalesDb",
+  "ServerInstance": "localhost\\sqlexpress",
+  "TablesExported": 5,
+  "TotalRows": 33,
+  "InteractiveMapping": false,
+  "Tables": [
+    {
+      "TableName": "Customers",
+      "RowCount": 5,
+      "Success": true,
+      "HeaderMapping": null
+    },
+    {
+      "TableName": "OrderDetails",
+      "RowCount": 8,
+      "Success": true,
+      "HeaderMapping": null
+    },
+    {
+      "TableName": "Orders",
+      "RowCount": 6,
+      "Success": true,
+      "HeaderMapping": null
+    },
+    {
+      "TableName": "Products",
+      "RowCount": 8,
+      "Success": true,
+      "HeaderMapping": null
+    },
+    {
+      "TableName": "Reviews",
+      "RowCount": 6,
+      "Success": true,
+      "HeaderMapping": null
+    }
+  ]
+}

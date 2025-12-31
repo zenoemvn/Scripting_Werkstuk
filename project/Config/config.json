@@ -1,0 +1,8 @@
+{
+  "DefaultServerInstance": "localhost\\SQLEXPRESS",
+  "DefaultBatchSize": 5000,
+  "DefaultExportFolder": ".\\Export",
+  "DefaultReportFolder": ".\\Reports",
+  "EnableVerboseLogging": true,
+  "EnableChecksumValidation": false
+}

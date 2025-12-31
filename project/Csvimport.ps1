@@ -15,12 +15,19 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Start time tracking
+$startTime = Get-Date
+
 Write-Host "╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "║      Generic CSV to Database Import            ║" -ForegroundColor Cyan
 Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
 
 # Import module
 Import-Module ".\Modules\DatabaseMigration.psm1" -Force
+
+# Onderdruk verbose output van ImportExcel module
+$oldVerbose = $VerbosePreference
+$VerbosePreference = 'SilentlyContinue'
 
 # Check of er metadata aanwezig is
 $metadataPath = Join-Path $CsvFolder "schema-metadata.json"
@@ -45,13 +52,44 @@ CREATE DATABASE [$DatabaseName];
     
     Write-Host "  ✓ Database created" -ForegroundColor Green
     
-    # Import met metadata
+    # Import met metadata - zonder automatisch rapport
     Write-Host "`n[STEP 2] Importing CSV files with metadata..." -ForegroundColor Yellow
     
     $importResult = Import-DatabaseFromCsv `
         -ServerInstance $ServerInstance `
         -Database $DatabaseName `
         -CsvFolder $CsvFolder
+    
+    # Calculate execution time (totale script tijd)
+    $endTime = Get-Date
+    $executionTime = ($endTime - $startTime)
+    if ($executionTime.TotalSeconds -lt 1) {
+        $executionTimeString = "{0:0.000} seconds" -f $executionTime.TotalSeconds
+    } elseif ($executionTime.TotalMinutes -lt 1) {
+        $executionTimeString = "{0:0.00} seconds" -f $executionTime.TotalSeconds
+    } else {
+        $executionTimeString = "{0:hh\:mm\:ss}" -f $executionTime
+    }
+    
+    # Update result object met correcte execution time
+    # Maak een nieuw object om array problemen te vermijden
+    $updatedResult = [PSCustomObject]@{
+        TablesProcessed = $importResult.TablesProcessed
+        SuccessfulImports = $importResult.SuccessfulImports
+        TotalRowsImported = $importResult.TotalRowsImported
+        PrimaryKeysAdded = $importResult.PrimaryKeysAdded
+        ForeignKeysAdded = $importResult.ForeignKeysAdded
+        Results = $importResult.Results
+        Success = $importResult.Success
+        StartTime = $startTime
+        EndTime = $endTime
+        ExecutionTime = $executionTime
+        ExecutionTimeFormatted = $executionTimeString
+    }
+    
+    # Nu rapport genereren met de juiste tijd
+    $reportPath = ".\Reports\CSV_Import_Metadata_$(Get-Date -Format 'yyyyMMdd_HHmmss').xlsx"
+    Export-MigrationReport -MigrationResults $updatedResult -OutputPath $reportPath -MigrationName "CSV Import (Metadata)"
     
     # Summary
     Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
@@ -60,6 +98,7 @@ CREATE DATABASE [$DatabaseName];
     Write-Host "Database      : $DatabaseName" -ForegroundColor Gray
     Write-Host "Mode          : Metadata-based import" -ForegroundColor Green
     Write-Host "Total Rows    : $($importResult.TotalRowsImported)" -ForegroundColor Gray
+    Write-Host "Execution Time: $executionTimeString" -ForegroundColor Gray
     
     if ($importResult.Success) {
         Write-Host "`n✓ Import completed successfully!" -ForegroundColor Green
@@ -248,7 +287,6 @@ $importParams = @{
     Database = $DatabaseName
     CsvFolder = $CsvFolder
     TableOrder = $importOrder
-    Verbose = $true
 }
 
 if ($primaryKeys.Count -gt 0) {
@@ -259,7 +297,41 @@ if ($foreignKeys.Count -gt 0) {
     $importParams['ForeignKeys'] = $foreignKeys
 }
 
+# Voeg rapport generatie toe - maar pas NA het berekenen van de totale execution time
+$importParams['GenerateReport'] = $false
+
 $importResult = Import-DatabaseFromCsv @importParams
+
+# Calculate execution time (totale script tijd)
+$endTime = Get-Date
+$executionTime = ($endTime - $startTime)
+if ($executionTime.TotalSeconds -lt 1) {
+    $executionTimeString = "{0:0.000} seconds" -f $executionTime.TotalSeconds
+} elseif ($executionTime.TotalMinutes -lt 1) {
+    $executionTimeString = "{0:0.00} seconds" -f $executionTime.TotalSeconds
+} else {
+    $executionTimeString = "{0:hh\:mm\:ss}" -f $executionTime
+}
+
+# Update result object met correcte execution time
+# Maak een nieuw object om array problemen te vermijden
+$updatedResult = [PSCustomObject]@{
+    TablesProcessed = $importResult.TablesProcessed
+    SuccessfulImports = $importResult.SuccessfulImports
+    TotalRowsImported = $importResult.TotalRowsImported
+    PrimaryKeysAdded = $primaryKeys.Count
+    ForeignKeysAdded = $foreignKeys.Count
+    Results = $importResult.Results
+    Success = $importResult.Success
+    StartTime = $startTime
+    EndTime = $endTime
+    ExecutionTime = $executionTime
+    ExecutionTimeFormatted = $executionTimeString
+}
+
+# Nu rapport genereren met de juiste tijd
+$reportPath = ".\Reports\CSV_Import_AutoDetect_$(Get-Date -Format 'yyyyMMdd_HHmmss').xlsx"
+Export-MigrationReport -MigrationResults $updatedResult -OutputPath $reportPath -MigrationName "CSV Import (Auto-Detect)"
 
 # Summary
 Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
@@ -267,12 +339,16 @@ Write-Host "║              IMPORT SUMMARY                    ║" -ForegroundC
 Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host "Database      : $DatabaseName" -ForegroundColor Gray
 Write-Host "Tables        : $($importOrder.Count)" -ForegroundColor Gray
-Write-Host "Primary Keys  : $($importResult.PrimaryKeysAdded)" -ForegroundColor Gray
-Write-Host "Foreign Keys  : $($importResult.ForeignKeysAdded)" -ForegroundColor Gray
-Write-Host "Total Rows    : $($importResult.TotalRowsImported)" -ForegroundColor Gray
+Write-Host "Primary Keys  :  $($primaryKeys.Count)" -ForegroundColor Gray
+Write-Host "Foreign Keys  :  $($foreignKeys.Count)" -ForegroundColor Gray
+Write-Host "Total Rows    :  $($importResult.TotalRowsImported)" -ForegroundColor Gray
+Write-Host "Execution Time: $executionTimeString" -ForegroundColor Gray
 
 if ($importResult.Success) {
     Write-Host "`n✓ Import completed successfully!" -ForegroundColor Green
 } else {
     Write-Host "`n✗ Import completed with errors" -ForegroundColor Red
 }
+
+# Herstel verbose preference
+$VerbosePreference = $oldVerbose
