@@ -1933,8 +1933,43 @@ function Import-CsvToSqlTable {
                 throw "CSV file not found: $CsvPath"
             }
             
+            # Convert to absolute path for TextFieldParser
+            $absolutePath = (Resolve-Path $CsvPath).Path
+            
             Write-Host "Reading CSV file..." -ForegroundColor Cyan
-            $csvData = Import-Csv -Path $CsvPath
+            
+            # Use TextFieldParser for proper CSV parsing (handles multi-line fields)
+            $csvData = @()
+            $parser = $null
+            
+            try {
+                Add-Type -AssemblyName Microsoft.VisualBasic
+                $parser = New-Object Microsoft.VisualBasic.FileIO.TextFieldParser($absolutePath)
+                $parser.TextFieldType = [Microsoft.VisualBasic.FileIO.FieldType]::Delimited
+                $parser.SetDelimiters(",")
+                $parser.HasFieldsEnclosedInQuotes = $true
+                
+                # Read header
+                $headers = $parser.ReadFields()
+                
+                # Read all rows
+                while (!$parser.EndOfData) {
+                    $fields = $parser.ReadFields()
+                    
+                    $row = [PSCustomObject]@{}
+                    for ($i = 0; $i -lt $headers.Count; $i++) {
+                        $row | Add-Member -MemberType NoteProperty -Name $headers[$i] -Value $fields[$i]
+                    }
+                    
+                    $csvData += $row
+                }
+            }
+            finally {
+                if ($parser) {
+                    $parser.Close()
+                    $parser.Dispose()
+                }
+            }
             
             if ($null -eq $csvData -or $csvData.Count -eq 0) {
                 throw "CSV file is empty or invalid"
@@ -2285,11 +2320,20 @@ WHERE TABLE_NAME = '$tableName'
                     # Remove "ID" suffix to get potential table name
                     $potentialTableName = $cleanName -replace 'ID$', ''
                     
-                    # Check if a table with this name exists (case-insensitive)
+                    # Check if a table with this name exists (case-insensitive, flexible matching)
                     $referencedTable = $tables | Where-Object { 
-                        $_.TABLE_NAME -eq $potentialTableName -or 
-                        $_.TABLE_NAME -eq "${potentialTableName}s" -or
-                        "${_.TABLE_NAME}s" -eq $potentialTableName
+                        $tblName = $_.TABLE_NAME
+                        
+                        # Exact match
+                        $tblName -eq $potentialTableName -or
+                        
+                        # Plural form
+                        $tblName -eq "${potentialTableName}s" -or
+                        "${tblName}s" -eq $potentialTableName -or
+                        
+                        # With suffix like (1), (2), etc
+                        $tblName -match "^$([regex]::Escape($potentialTableName))\s*\(\d+\)$" -or
+                        $tblName -match "^$([regex]::Escape($potentialTableName))s\s*\(\d+\)$"
                     } | Select-Object -First 1
                     
                     if ($referencedTable -and $primaryKeys.ContainsKey($referencedTable.TABLE_NAME)) {
@@ -2523,6 +2567,10 @@ function Import-DatabaseFromCsv {
             Write-Host "`nDetails:" -ForegroundColor Cyan
             $results | Select-Object TableName, RowsImported, Success | Format-Table -AutoSize
             
+            # Track how many PKs and FKs are actually added
+            $pkAddedCount = 0
+            $fkAddedCount = 0
+            
             if ($PrimaryKeys -and $PrimaryKeys.Count -gt 0) {
                 Write-Host "`n=== Adding Primary Key Constraints ===" -ForegroundColor Cyan
                 
@@ -2543,6 +2591,7 @@ PRIMARY KEY ([$pkColumn])
                         
                         Invoke-Sqlcmd -ServerInstance $ServerInstance -Database $Database -TrustServerCertificate -Query $query -ErrorAction Stop
                         Write-Host "   Primary key added to $tableName" -ForegroundColor Green
+                        $pkAddedCount++
                     }
                     catch {
                         Write-Host "    Failed to add PK to $tableName : $_" -ForegroundColor Red
@@ -2584,6 +2633,7 @@ REFERENCES [$($fk.ToTable)]([$($fk.ToColumn)])
                         
                         Invoke-Sqlcmd -ServerInstance $ServerInstance -Database $Database -TrustServerCertificate -Query $query -ErrorAction Stop
                         Write-Host "   $fkName added" -ForegroundColor Green
+                        $fkAddedCount++
                     }
                     catch {
                         Write-Host "    Failed to add $fkName : $_" -ForegroundColor Red
@@ -2609,8 +2659,8 @@ REFERENCES [$($fk.ToTable)]([$($fk.ToColumn)])
                 TablesProcessed = $results.Count
                 SuccessfulImports = $successCount
                 TotalRowsImported = $totalRows
-                PrimaryKeysAdded = if ($PrimaryKeys) { $PrimaryKeys.Count } else { 0 }
-                ForeignKeysAdded = if ($ForeignKeys) { $ForeignKeys.Count } else { 0 }
+                PrimaryKeysAdded = $pkAddedCount
+                ForeignKeysAdded = $fkAddedCount
                 Results = $results
                 Success = ($successCount -eq $results.Count)
                 StartTime = $startTime

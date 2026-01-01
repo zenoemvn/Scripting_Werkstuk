@@ -25,6 +25,48 @@ Write-Host "╚═════════════════════�
 # Import module
 Import-Module ".\Modules\DatabaseMigration.psm1" -Force
 
+# Function to properly count CSV rows (handles multi-line fields)
+function Get-CsvRowCount {
+    param([string]$CsvPath)
+    
+    $absolutePath = (Resolve-Path $CsvPath).Path
+    
+    # Use StreamReader for more reliable counting
+    $reader = $null
+    $count = 0
+    $inQuotes = $false
+    
+    try {
+        $reader = [System.IO.StreamReader]::new($absolutePath)
+        
+        # Skip header line
+        $null = $reader.ReadLine()
+        
+        # Count data rows
+        while ($null -ne ($line = $reader.ReadLine())) {
+            # Count quotes to determine if we're inside a quoted field
+            foreach ($char in $line.ToCharArray()) {
+                if ($char -eq '"') {
+                    $inQuotes = -not $inQuotes
+                }
+            }
+            
+            # Only count as a new row if we're not inside quotes
+            if (-not $inQuotes) {
+                $count++
+            }
+        }
+    }
+    finally {
+        if ($reader) {
+            $reader.Close()
+            $reader.Dispose()
+        }
+    }
+    
+    return $count
+}
+
 # Onderdruk verbose output van ImportExcel module
 $oldVerbose = $VerbosePreference
 $VerbosePreference = 'SilentlyContinue'
@@ -138,9 +180,11 @@ foreach ($file in $csvFiles) {
     $sampleData = Import-Csv $file.FullName | Select-Object -First 1
     
     $columns = $sampleData.PSObject.Properties.Name
+    $rowCount = Get-CsvRowCount -CsvPath $file.FullName
+    
     $tableInfo[$tableName] = @{
         FileName = $file.Name
-        RowCount = (Import-Csv $file.FullName).Count
+        RowCount = $rowCount
         Columns = $columns
     }
     
@@ -319,8 +363,8 @@ $updatedResult = [PSCustomObject]@{
     TablesProcessed = $importResult.TablesProcessed
     SuccessfulImports = $importResult.SuccessfulImports
     TotalRowsImported = $importResult.TotalRowsImported
-    PrimaryKeysAdded = $primaryKeys.Count
-    ForeignKeysAdded = $foreignKeys.Count
+    PrimaryKeysAdded = $importResult.PrimaryKeysAdded  # Use result from Import-DatabaseFromCsv
+    ForeignKeysAdded = $importResult.ForeignKeysAdded  # Use result from Import-DatabaseFromCsv
     Results = $importResult.Results
     Success = $importResult.Success
     StartTime = $startTime
@@ -339,8 +383,8 @@ Write-Host "║              IMPORT SUMMARY                    ║" -ForegroundC
 Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host "Database      : $DatabaseName" -ForegroundColor Gray
 Write-Host "Tables        : $($importOrder.Count)" -ForegroundColor Gray
-Write-Host "Primary Keys  :  $($primaryKeys.Count)" -ForegroundColor Gray
-Write-Host "Foreign Keys  :  $($foreignKeys.Count)" -ForegroundColor Gray
+Write-Host "Primary Keys  :  $($importResult.PrimaryKeysAdded)" -ForegroundColor Gray
+Write-Host "Foreign Keys  :  $($importResult.ForeignKeysAdded)" -ForegroundColor Gray
 Write-Host "Total Rows    :  $($importResult.TotalRowsImported)" -ForegroundColor Gray
 Write-Host "Execution Time: $executionTimeString" -ForegroundColor Gray
 
