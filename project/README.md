@@ -160,6 +160,116 @@ Invoke-Sqlcmd -ServerInstance "localhost\SQLEXPRESS" -Query "SELECT @@VERSION" -
 
 ---
 
+## 📂 Dataset & Voorbereidingen
+
+### Voorbeeld Dataset in Import Folder
+
+Dit project bevat een **complete dataset** in de `.\Import\` folder die gebruikt wordt voor alle voorbeelden en demonstraties. Deze dataset bestaat uit Stack Overflow data met meerdere tabellen en relationele koppelingen.
+
+**Beschikbare CSV bestanden:**
+
+| Bestand | Beschrijving | Aantal Rijen | Kolommen |
+|---------|--------------|--------------|----------|
+| `Posts (1).csv` | Vragen en antwoorden | ~4,000 | 22 (incl. multi-line text) |
+| `Users (1).csv` | Gebruikers informatie | ~15,000 | 12 |
+| `Comments (1).csv` | Reacties op posts | ~10,000 | 7 |
+| `Votes (1).csv` | Stemmen op posts | ~33,000 | 4 |
+| `Badges (2).csv` | Badges/achievements | ~27,000 | 6 |
+| `PostHistory (1).csv` | Bewerkingsgeschiedenis | ~12,000 | 10 (multi-line) |
+| `PostLinks (1).csv` | Links tussen posts | ~750 | 5 |
+| `Tags (1).csv` | Tags/categorieën | ~105 | 7 |
+
+**Totaal: ~101,000 rijen** verspreid over 8 tabellen met relationele koppelingen (Foreign Keys).
+
+> **💡 Belangrijk:**  
+> - Deze CSV bestanden bevatten **multi-line text fields** (zoals post inhoud en comments)
+> - De bestanden zijn **correct ge-formatted** volgens RFC 4180 CSV standaard
+> - Foreign Key relaties tussen tabellen zijn aanwezig (bijv. `Comments._PostId` → `Posts._Id`)
+> - Deze dataset wordt gebruikt in **alle voorbeelden** in deze documentatie
+
+### Eerste Stap: Importeer de Dataset
+
+Voordat je andere features gebruikt, importeer eerst de voorbeeld dataset naar een SQL Server database:
+
+```powershell
+# Importeer de volledige Stack Overflow dataset
+.\Csvimport.ps1 `
+    -CsvFolder ".\Import" `
+    -DatabaseName "StackOverflow" `
+    -ServerInstance "localhost\SQLEXPRESS"
+```
+
+**Bekijk de data:**
+
+Open SQL Server Management Studio en explore de database:
+
+```sql
+-- Voorbeeld queries
+USE StackOverflow;
+
+-- Top 10 gebruikers met meeste badges
+SELECT TOP 10 
+    u._DisplayName, 
+    COUNT(b._Id) as BadgeCount
+FROM [Users (1)] u
+INNER JOIN [Badges (2)] b ON u._Id = b._UserId
+GROUP BY u._DisplayName
+ORDER BY BadgeCount DESC;
+
+-- Posts met meeste comments
+SELECT TOP 10
+    p._Title,
+    COUNT(c._Id) as CommentCount
+FROM [Posts (1)] p
+INNER JOIN [Comments (1)] c ON p._Id = c._PostId
+GROUP BY p._Title
+ORDER BY CommentCount DESC;
+
+-- Multi-line text voorbeeld
+SELECT TOP 1 
+    _Id, 
+    _Text 
+FROM [PostHistory (1)] 
+WHERE _Text LIKE '%printing%';
+```
+
+### Nu je de Dataset Hebt: Wat Verder?
+
+Nu de voorbeeld dataset geïmporteerd is, kun je:
+
+1. **Exporteer de database** naar CSV met metadata:
+   ```powershell
+   .\Export.ps1 -ServerInstance "localhost\SQLEXPRESS" `
+       -Database "StackOverflow" `
+       -OutputFolder ".\Export\StackOverflow_Backup" `
+       -SaveSchemaMetadata
+   ```
+
+2. **Genereer documentatie**:
+   ```powershell
+   .\Demo-SchemaAnalysis.ps1
+   # Of handmatig:
+   Export-DatabaseSchemaToMarkdown `
+       -ServerInstance "localhost\SQLEXPRESS" `
+       -Database "StackOverflow" `
+       -OutputPath ".\Documentation\StackOverflow-Schema.md"
+   ```
+
+3. **Converteer naar SQLite**:
+   ```powershell
+   Convert-SqlServerToSQLite `
+       -ServerInstance "localhost\SQLEXPRESS" `
+       -Database "StackOverflow" `
+       -SQLitePath ".\data\StackOverflow.db"
+   ```
+
+4. **Genereer migration reports**:
+   ```powershell
+   .\Demo-MigrationReport.ps1
+   ```
+
+---
+
 ## ⚙️ Configuratie
 
 ### Configuratie Bestanden
@@ -278,74 +388,108 @@ Import-CsvToSqlTable `
 ## 🚀 Gebruik
 
 > **💡 Belangrijk:** Er zijn twee manieren om de toolkit te gebruiken:
-> 1. **Module functies** (aanbevolen): `Import-Module .\Modules\DatabaseMigration.psm1` en gebruik de functies
-> 2. **Standalone scripts**: Direct de `.ps1` scripts aanroepen (bijvoorbeeld `.\Csvimport.ps1`)
+> 1. **Standalone scripts** (eenvoudigst): Direct de `.ps1` scripts aanroepen voor quick tasks
+> 2. **Module functies** (gevorderd): `Import-Module .\Modules\DatabaseMigration.psm1` en gebruik de functies voor custom workflows
 > 
->  **Let op:** Standalone scripts gebruiken andere parameter namen dan de module functies!
+> **Let op:** Standalone scripts gebruiken andere parameter namen dan de module functies!
 
-### Quick Start: Complete Workflow
+### Quick Start: Van CSV naar Database
 
-**Optie 1: Via Module Functies (Aanbevolen)**
+**Stap 1: Importeer de Voorbeeld Dataset**
+
+Begin met het importeren van de StackOverflow dataset die in de `.\Import\` folder zit:
 
 ```powershell
-# 1. Importeer de module
-Import-Module .\Modules\DatabaseMigration.psm1 -Force
-
-# 2. Maak een test database aan (optioneel)
-.\create-testdatabasewithrelations.ps1 `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -DatabaseName "SalesDB"
-
-# 3. Exporteer database naar CSV met volledige metadata
-Export-DatabaseSchemaToCsv `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "SalesDB" `
-    -OutputFolder ".\Export\SalesDB_Backup"
-
-# 4. Maak doel database aan
-Invoke-Sqlcmd -ServerInstance "localhost\SQLEXPRESS" -TrustServerCertificate -Query @"
-IF EXISTS (SELECT * FROM sys.databases WHERE name = 'SalesDB_Restored')
-BEGIN
-    ALTER DATABASE [SalesDB_Restored] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE [SalesDB_Restored];
-END
-CREATE DATABASE [SalesDB_Restored];
-"@
-
-# 5. Importeer CSV naar database
-Import-DatabaseFromCsv `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "SalesDB_Restored" `
-    -CsvFolder ".\Export\SalesDB_Backup"
-
-# 6. Genereer documentatie
-Export-DatabaseSchemaToMarkdown `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "SalesDB_Restored" `
-    -OutputPath ".\Documentation\SalesDB.md"
+# Importeer alle CSV bestanden uit Import folder
+.\Csvimport.ps1 `
+    -CsvFolder ".\Import" `
+    -DatabaseName "StackOverflow" `
+    -ServerInstance "localhost\SQLEXPRESS"
 ```
 
-**Optie 2: Via Standalone Scripts**
+Dit duurt ongeveer **1-2 minuten** en importeert ~101,000 rijen verspreid over 8 tabellen.
+
+**Stap 2: Verifieer de Import**
 
 ```powershell
-# 1. Maak een test database aan
-.\create-testdatabasewithrelations.ps1 `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -DatabaseName "SalesDB"
+# Check of alle tabellen zijn aangemaakt
+Invoke-Sqlcmd -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -TrustServerCertificate `
+    -Query "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
 
-# 2. Exporteer database naar CSV (gebruikt module intern)
+# Output: Posts (1), Users (1), Comments (1), Votes (1), etc.
+```
+
+**Stap 3: Genereer Documentatie**
+
+```powershell
+# Maak een Markdown documentatie van de database structuur
+.\Demo-SchemaAnalysis.ps1
+
+# Dit genereert: .\Documentation\StackOverflow-Schema.md
+# Met: Table of Contents, kolom definities, PKs, FKs, indexes
+```
+
+**Stap 4: Exporteer naar CSV met Metadata**
+
+```powershell
+# Exporteer de database terug naar CSV (met volledige schema metadata)
 .\Export.ps1 `
     -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "SalesDB" `
-    -OutputFolder ".\Export\SalesDB_Backup" `
+    -Database "StackOverflow" `
+    -OutputFolder ".\Export\StackOverflow_Backup" `
     -SaveSchemaMetadata
 
-# 3. Importeer CSV naar nieuwe database
-# LET OP: Script gebruikt -DatabaseName (niet -Database)!
+# Dit creëert:
+# - 8 CSV bestanden (één per tabel)
+# - schema-metadata.json (met PKs, FKs, datatypes, constraints)
+```
+
+**Stap 5: Test een Complete Roundtrip**
+
+```powershell
+# Importeer de geëxporteerde CSV bestanden naar een NIEUWE database
 .\Csvimport.ps1 `
-    -CsvFolder ".\Export\SalesDB_Backup" `
-    -DatabaseName "SalesDB_Restored" `
+    -CsvFolder ".\Export\StackOverflow_Backup" `
+    -DatabaseName "StackOverflow_Copy" `
     -ServerInstance "localhost\SQLEXPRESS"
+
+# Vergelijk beide databases:
+# - Alle tabellen moeten identiek zijn
+# - Alle constraints (PKs en FKs) moeten aanwezig zijn
+# - Alle row counts moeten matchen
+```
+
+### Complete Workflow: Database Migratie
+
+**Scenario: Migreer SQL Server Database naar SQLite en terug**
+
+```powershell
+# Stap 1: Importeer voorbeeld data (indien nog niet gedaan)
+.\Csvimport.ps1 -CsvFolder ".\Import" -DatabaseName "StackOverflow" -ServerInstance "localhost\SQLEXPRESS"
+
+# Stap 2: Converteer SQL Server naar SQLite
+Import-Module .\Modules\DatabaseMigration.psm1 -Force
+
+Convert-SqlServerToSQLite `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -SQLitePath ".\data\StackOverflow.db"
+
+# Stap 3: Verifieer SQLite database
+$tables = Invoke-SqliteQuery -DataSource ".\data\StackOverflow.db" -Query "SELECT name FROM sqlite_master WHERE type='table'"
+$tables | ForEach-Object { Write-Host "Table: $($_.name)" }
+
+# Stap 4: Converteer SQLite terug naar SQL Server
+Convert-SQLiteToSqlServer `
+    -SQLitePath ".\data\StackOverflow.db" `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow_FromSQLite" `
+    -ValidateChecksum
+
+# Stap 5: Genereer migratie rapport
+# (Wordt automatisch gegenereerd als Excel bestand in .\Reports\)
 ```
 
 ### Gebruiksscenario's
@@ -356,47 +500,50 @@ Export-DatabaseSchemaToMarkdown `
 # Converteer complete SQL Server database naar SQLite
 Convert-SqlServerToSQLite `
     -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "ProductionDB" `
-    -SQLitePath ".\data\ProductionDB.db"
+    -Database "StackOverflow" `
+    -SQLitePath ".\data\StackOverflow.db"
+
+# Rapport wordt automatisch gegenereerd in .\Reports\
+```
 
 #### Scenario 2: SQLite naar SQL Server met Validatie
 
 ```powershell
 # Migreer met checksum validatie voor data integriteit
-$result = Convert-SQLiteToSqlServer `
-    -SQLitePath ".\data\ProductionDB.db" `
+Convert-SQLiteToSqlServer `
+    -SQLitePath ".\data\StackOverflow.db" `
     -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "TargetDB" `
+    -Database "StackOverflow_Restored" `
     -BatchSize 10000 `
     -ValidateChecksum
 
-# Genereer Excel rapport van migratie
-Export-MigrationReport `
-    -MigrationResults $result `
-    -OutputPath ".\Reports\Migration_$(Get-Date -Format 'yyyyMMdd_HHmmss').xlsx" `
-    -MigrationName "SQLite Production Migration"
-
-# Open het rapport
-Invoke-Item ".\Reports\Migration_*.xlsx"
+# Rapport wordt automatisch gegenereerd in .\Reports\
+# Open het meest recente rapport:
+Get-ChildItem .\Reports\ | Sort-Object LastWriteTime -Descending | Select-Object -First 1 | Invoke-Item
 ```
 
 #### Scenario 3: Specifieke Tabellen Exporteren
 
 ```powershell
-# Exporteer alleen specifieke tabellen met custom header mapping
+# Exporteer alleen de Users tabel naar CSV
 Export-SqlTableToCsv `
     -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "SalesDB" `
-    -TableName "Customers" `
-    -OutputPath ".\Export\Klanten.csv" `
-    -HeaderMapping @{
-        'CustomerID' = 'Klant_ID'
-        'FirstName' = 'Voornaam'
-        'LastName' = 'Achternaam'
-        'Email' = 'E-mail'
-    }
+    -Database "StackOverflow" `
+    -TableName "Users (1)" `
+    -OutputPath ".\Export\Users.csv"
 
-# Resultaat: CSV met Nederlandse kolomnamen
+# Exporteer Posts met custom kolomnamen
+Export-SqlTableToCsv `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -TableName "Posts (1)" `
+    -OutputPath ".\Export\Posts.csv" `
+    -HeaderMapping @{
+        '_Id' = 'PostID'
+        '_Title' = 'Titel'
+        '_Body' = 'Inhoud'
+        '_Score' = 'Score'
+    }
 ```
 
 #### Scenario 4: Roundtrip Testing (Validatie)
@@ -404,28 +551,26 @@ Export-SqlTableToCsv `
 ```powershell
 # Test de complete cyclus: SQL Server -> SQLite -> SQL Server
 .\SQLiteRoundtrip.ps1
-
 ```
 
 #### Scenario 5: Schema Documentatie Genereren
 
 ```powershell
-# Genereer Markdown documentatie voor alle databases
-$databases = @("SalesDB", "InventoryDB", "HRDB")
+# Genereer Markdown documentatie van de StackOverflow database
+Export-DatabaseSchemaToMarkdown `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -OutputPath ".\Documentation\StackOverflow-Schema.md"
 
-foreach ($db in $databases) {
-    Export-DatabaseSchemaToMarkdown `
-        -ServerInstance "localhost\SQLEXPRESS" `
-        -Database $db `
-        -OutputPath ".\Documentation\$db-Schema.md"
-}
+# Of gebruik het demo script:
+.\Demo-SchemaAnalysis.ps1
 
 # Output: Professionele documentatie met:
 # - Table of Contents
-# - Volledige kolom definities
-# - Primary Keys, Foreign Keys
+# - Volledige kolom definities (met datatypes)
+# - Primary Keys en Foreign Keys
 # - Indexes en constraints
-# - Row counts en table sizes
+# - Row counts per tabel
 ```
 
 ### Handige Scripts
@@ -498,7 +643,7 @@ Het project bevat verschillende kant-en-klare scripts voor veelvoorkomende taken
 
 ---
 
-## 🏗️ Architectuur & Structuur
+## 🏗️ Architectuur & Structuur 
 
 ### Project Architectuur
 

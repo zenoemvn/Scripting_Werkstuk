@@ -127,6 +127,9 @@ CREATE DATABASE [$DatabaseName];
         EndTime = $endTime
         ExecutionTime = $executionTime
         ExecutionTimeFormatted = $executionTimeString
+        ServerInstance = $ServerInstance
+        Database = $DatabaseName
+        CsvFolder = (Resolve-Path $CsvFolder).Path
     }
     
     # Nu rapport genereren met de juiste tijd
@@ -371,6 +374,9 @@ $updatedResult = [PSCustomObject]@{
     EndTime = $endTime
     ExecutionTime = $executionTime
     ExecutionTimeFormatted = $executionTimeString
+    ServerInstance = $ServerInstance
+    Database = $DatabaseName
+    CsvFolder = (Resolve-Path $CsvFolder).Path
 }
 
 # Nu rapport genereren met de juiste tijd

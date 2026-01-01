@@ -327,7 +327,7 @@ function Convert-SQLiteToSqlServer {
         [switch]$ValidateChecksum,
         
         [Parameter()]
-        [switch]$GenerateReport,
+        [bool]$GenerateReport = $true,
         
         [Parameter()]
         [string]$ReportPath
@@ -592,6 +592,8 @@ CREATE DATABASE [$Database];
                 Results = $migrationResults
                 TotalRows = $totalRows
                 SQLitePath = $SQLitePath
+                ServerInstance = $ServerInstance
+                Database = $Database
                 PrimaryKeysAdded = $Tables.Count
                 ForeignKeysAdded = $fkCount
                 StartTime = $startTime
@@ -766,7 +768,7 @@ function Convert-SqlServerToSQLite {
         [string[]]$Tables = @(),
         
         [Parameter()]
-        [switch]$GenerateReport,
+        [bool]$GenerateReport = $true,
         
         [Parameter()]
         [string]$ReportPath
@@ -1037,6 +1039,8 @@ WHERE t.name = '$tableName'
                 Results = $migrationResults
                 TotalRows = $totalRows
                 SQLitePath = $SQLitePath
+                ServerInstance = $ServerInstance
+                Database = $Database
                 PrimaryKeysAdded = $pkCount
                 ForeignKeysAdded = $fkCount
                 StartTime = $startTime
@@ -2473,6 +2477,43 @@ function Import-DatabaseFromCsv {
                 Write-Host "|      CSV Import without Metadata               |" -ForegroundColor Cyan
                 Write-Host "==================================================" -ForegroundColor Cyan
                 Write-Host " No schema-metadata.json found - constraints may be lost" -ForegroundColor Yellow
+                
+                # Auto-detect Primary Keys if not provided
+                if (-not $PrimaryKeys -or $PrimaryKeys.Count -eq 0) {
+                    Write-Host "`nAuto-detecting Primary Keys..." -ForegroundColor Yellow
+                    $PrimaryKeys = @{}
+                    
+                    $csvFiles = Get-ChildItem -Path $CsvFolder -Filter "*.csv"
+                    foreach ($file in $csvFiles) {
+                        $tableName = $file.BaseName
+                        
+                        # Read first row to get column names
+                        $sampleData = Import-Csv $file.FullName | Select-Object -First 1
+                        $columns = $sampleData.PSObject.Properties.Name
+                        
+                        # Look for ID columns
+                        $idColumns = $columns | Where-Object { $_ -like "*ID" }
+                        
+                        # Prefer exact match with table name
+                        $pkColumn = $idColumns | Where-Object { $_ -eq "${tableName}ID" } | Select-Object -First 1
+                        
+                        if (-not $pkColumn) {
+                            # Take first ID column
+                            $pkColumn = $idColumns | Select-Object -First 1
+                        }
+                        
+                        if ($pkColumn) {
+                            $PrimaryKeys[$tableName] = $pkColumn
+                            Write-Host "  $tableName -> PK: $pkColumn" -ForegroundColor Gray
+                        }
+                    }
+                    
+                    if ($PrimaryKeys.Count -gt 0) {
+                        Write-Host "  Detected $($PrimaryKeys.Count) primary key(s)" -ForegroundColor Green
+                    } else {
+                        Write-Host "  No primary keys detected" -ForegroundColor Yellow
+                    }
+                }
             }
             
             $csvFiles = Get-ChildItem -Path $CsvFolder -Filter "*.csv"
@@ -2856,22 +2897,65 @@ function Export-MigrationReport {
             # 1. SUMMARY SHEET
             Write-Host "Creating Summary sheet..." -ForegroundColor Gray
             
+            # Extract source/destination information
+            $serverInstance = if ($MigrationResults.ServerInstance) { $MigrationResults.ServerInstance } 
+                             elseif ($MigrationResults['ServerInstance']) { $MigrationResults['ServerInstance'] } 
+                             else { "N/A" }
+            
+            $database = if ($MigrationResults.Database) { $MigrationResults.Database } 
+                       elseif ($MigrationResults['Database']) { $MigrationResults['Database'] } 
+                       else { "N/A" }
+            
+            $csvFolder = if ($MigrationResults.CsvFolder) { $MigrationResults.CsvFolder } 
+                        elseif ($MigrationResults['CsvFolder']) { $MigrationResults['CsvFolder'] } 
+                        else { $null }
+            
             # Create summary as array to avoid OrderedDictionary issues with Export-Excel
             $summaryData = @(
                 [PSCustomObject]@{ Property = 'Migration Name'; Value = $MigrationName }
                 [PSCustomObject]@{ Property = 'Migration Type'; Value = $migrationType }
                 [PSCustomObject]@{ Property = 'Date & Time'; Value = $timestamp.ToString("yyyy-MM-dd HH:mm:ss") }
-                [PSCustomObject]@{ Property = 'Overall Status'; Value = if ($success) { " Success" } else { " Completed with errors" } }
+                [PSCustomObject]@{ Property = 'Overall Status'; Value = if ($success) { "✓ Success" } else { "✗ Completed with errors" } }
                 [PSCustomObject]@{ Property = ''; Value = '' }
+            )
+            
+            # Add source/destination information based on migration type
+            if ($sqlitePath) {
+                $summaryData += [PSCustomObject]@{ Property = 'SQLite Database'; Value = $sqlitePath }
+            }
+            
+            if ($serverInstance -ne "N/A") {
+                $summaryData += [PSCustomObject]@{ Property = 'SQL Server Instance'; Value = $serverInstance }
+            }
+            
+            if ($database -ne "N/A") {
+                $summaryData += [PSCustomObject]@{ Property = 'Database Name'; Value = $database }
+            }
+            
+            if ($csvFolder) {
+                $summaryData += [PSCustomObject]@{ Property = 'CSV Folder'; Value = $csvFolder }
+                
+                # List CSV files if available
+                if (Test-Path $csvFolder) {
+                    $csvFiles = Get-ChildItem -Path $csvFolder -Filter "*.csv" | Select-Object -ExpandProperty Name
+                    if ($csvFiles.Count -gt 0) {
+                        $summaryData += [PSCustomObject]@{ Property = 'CSV Files Count'; Value = $csvFiles.Count }
+                        $summaryData += [PSCustomObject]@{ Property = 'CSV Files'; Value = ($csvFiles -join ", ") }
+                    }
+                }
+            }
+            
+            $summaryData += @(
+                [PSCustomObject]@{ Property = ' '; Value = '' }
                 [PSCustomObject]@{ Property = 'Total Tables'; Value = $totalTables }
                 [PSCustomObject]@{ Property = 'Successful Tables'; Value = $successfulTables }
                 [PSCustomObject]@{ Property = 'Failed Tables'; Value = $failedTables }
                 [PSCustomObject]@{ Property = 'Success Rate'; Value = if ($totalTables -gt 0) { "{0:P1}" -f ($successfulTables / $totalTables) } else { "N/A" } }
-                [PSCustomObject]@{ Property = ' '; Value = '' }
+                [PSCustomObject]@{ Property = '  '; Value = '' }
                 [PSCustomObject]@{ Property = 'Total Rows Migrated'; Value = $totalRows }
                 [PSCustomObject]@{ Property = 'Primary Keys Added'; Value = $primaryKeysAdded }
                 [PSCustomObject]@{ Property = 'Foreign Keys Added'; Value = $foreignKeysAdded }
-                [PSCustomObject]@{ Property = '  '; Value = '' }
+                [PSCustomObject]@{ Property = '   '; Value = '' }
                 [PSCustomObject]@{ Property = 'Execution Time'; Value = $executionTime }
             )
             

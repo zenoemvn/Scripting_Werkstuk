@@ -1,7 +1,0 @@
-"ReviewID","ProductID","CustomerID","Rating","Comment","ReviewDate"
-"1","1","1","5","Excellent laptop, very fast!","19/12/2025 13:13:03"
-"2","1","3","4","Good performance but a bit pricey","19/12/2025 13:13:03"
-"3","2","1","5","Perfect wireless mouse","19/12/2025 13:13:03"
-"4","3","2","4","Comfortable chair","19/12/2025 13:13:03"
-"5","6","2","5","Great monitor for the price","19/12/2025 13:13:03"
-"6","7","3","5","Best mechanical keyboard I have used","19/12/2025 13:13:03"
