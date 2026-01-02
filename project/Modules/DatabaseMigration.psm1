@@ -809,8 +809,13 @@ function Convert-SqlServerToSQLite {
                 New-Item -Path $parentDir -ItemType Directory -Force | Out-Null
             }
             
+            # Optimaliseer SQLite voor snelle imports
             Invoke-SqliteQuery -DataSource $SQLitePath -Query "PRAGMA foreign_keys = ON;"
-            Write-Host " SQLite database created" -ForegroundColor Green
+            Invoke-SqliteQuery -DataSource $SQLitePath -Query "PRAGMA synchronous = NORMAL;"
+            Invoke-SqliteQuery -DataSource $SQLitePath -Query "PRAGMA journal_mode = WAL;"
+            Invoke-SqliteQuery -DataSource $SQLitePath -Query "PRAGMA temp_store = MEMORY;"
+            Invoke-SqliteQuery -DataSource $SQLitePath -Query "PRAGMA cache_size = -64000;"
+            Write-Host " SQLite database created (optimized for bulk import)" -ForegroundColor Green
             
             Write-Host "`n[3/4] Migrating tables..." -ForegroundColor Yellow
             $migrationResults = @()
@@ -935,8 +940,14 @@ WHERE t.name = '$tableName'
                     
                     $insertedRows = 0
                     $columnNames = $columns | Select-Object -ExpandProperty COLUMN_NAME
+                    $batchSize = 5000  # Grote batches voor SQLite performance
                     
                     try {
+                        $totalDataRows = @($data).Count
+                        
+                        # Build batch INSERT statements (geen transactie management, laat PSSQLite het doen)
+                        $allInserts = @()
+                        
                         foreach ($row in $data) {
                             $values = foreach ($colName in $columnNames) {
                                 $value = $row.$colName
@@ -949,15 +960,22 @@ WHERE t.name = '$tableName'
                                 }
                             }
                             
-                            $insertQuery = "INSERT INTO [$tableName] ([$($columnNames -join '],[')])
-                                           VALUES ($($values -join ','))"
+                            $allInserts += "INSERT INTO [$tableName] ([$($columnNames -join '],[')])
+                                           VALUES ($($values -join ','));"
+                            $insertedRows++
+                        }
+                        
+                        # Execute in batches
+                        for ($i = 0; $i -lt $allInserts.Count; $i += $batchSize) {
+                            $batchEnd = [Math]::Min($i + $batchSize, $allInserts.Count)
+                            $batchInserts = $allInserts[$i..($batchEnd - 1)]
+                            $batchQuery = $batchInserts -join "`n"
                             
-                            try {
-                                Invoke-SqliteQuery -DataSource $SQLitePath -Query $insertQuery
-                                $insertedRows++
-                            }
-                            catch {
-                                Write-Verbose "Insert failed for row: $_"
+                            Invoke-SqliteQuery -DataSource $SQLitePath -Query $batchQuery
+                            
+                            # Progress update elke batch
+                            if ($allInserts.Count -gt $batchSize) {
+                                Write-Host "      Inserted $batchEnd / $($allInserts.Count) rows..." -ForegroundColor Gray
                             }
                         }
                         
@@ -1924,7 +1942,10 @@ function Import-CsvToSqlTable {
         [int]$BatchSize = 1000,
         
         [Parameter()]
-        [switch]$UseTransaction
+        [switch]$UseTransaction,
+        
+        [Parameter()]
+        [string]$PrimaryKeyColumn
     )
     
     begin {
@@ -2057,7 +2078,7 @@ function Import-CsvToSqlTable {
                 # Detecteer welke kolom de PK is (eindigt op ID en matcht tabelnaam, of eerste ID kolom)
                 $pkColumn = $null
                 $columnNames = $firstRow.PSObject.Properties.Name
-                $idColumns = $columnNames | Where-Object { $_ -like "*ID" }
+                $idColumns = $columnNames | Where-Object { $_ -like "*ID" -or $_ -like "*Id" }
                 
                 if ($idColumns) {
                     # Zoek exact match met tabelnaam
@@ -2066,6 +2087,11 @@ function Import-CsvToSqlTable {
                         # Neem eerste ID kolom
                         $pkColumn = $idColumns | Select-Object -First 1
                     }
+                }
+                
+                # Als PrimaryKeyColumn parameter is opgegeven, gebruik die (voor metadata imports)
+                if ($PrimaryKeyColumn) {
+                    $pkColumn = $PrimaryKeyColumn
                 }
                 
                 foreach ($prop in $firstRow.PSObject.Properties) {
@@ -2630,12 +2656,19 @@ function Import-DatabaseFromCsv {
                 
                 Write-Host "`n[$($successCount + 1)/$($importOrder.Count)] Importing $tableName..." -ForegroundColor Yellow
                 
+                # Check of we een PK voor deze tabel hebben uit de metadata
+                $pkCol = $null
+                if ($PrimaryKeys -and $PrimaryKeys.ContainsKey($tableName)) {
+                    $pkCol = $PrimaryKeys[$tableName]
+                }
+                
                 $result = Import-CsvToSqlTable `
                     -ServerInstance $ServerInstance `
                     -Database $Database `
                     -TableName $tableName `
                     -CsvPath $csvPath `
-                    -CreateTable
+                    -CreateTable `
+                    -PrimaryKeyColumn $pkCol
                 
                 $results += $result
                 $totalRows += $result.RowsImported
@@ -2674,6 +2707,22 @@ function Import-DatabaseFromCsv {
                     
                     try {
                         Write-Host "Adding PK to $tableName..." -ForegroundColor Gray
+                        
+                        # Controleer eerst of de kolom NOT NULL is, zo niet, maak hem NOT NULL
+                        $nullCheck = Invoke-Sqlcmd -ServerInstance $ServerInstance -Database $Database -TrustServerCertificate -Query "
+                            SELECT IS_NULLABLE 
+                            FROM INFORMATION_SCHEMA.COLUMNS 
+                            WHERE TABLE_NAME = '$tableName' AND COLUMN_NAME = '$pkColumn'
+                        " -ErrorAction Stop
+                        
+                        if ($nullCheck.IS_NULLABLE -eq 'YES') {
+                            # Kolom is nullable, maak hem NOT NULL
+                            Write-Host "   Making column NOT NULL..." -ForegroundColor Yellow
+                            Invoke-Sqlcmd -ServerInstance $ServerInstance -Database $Database -TrustServerCertificate -Query "
+                                ALTER TABLE [$tableName]
+                                ALTER COLUMN [$pkColumn] INT NOT NULL
+                            " -ErrorAction Stop
+                        }
                         
                         # Sanitize table name voor constraint naam (verwijder speciale karakters)
                         $sanitizedName = $tableName -replace '[^a-zA-Z0-9_]', '_'
