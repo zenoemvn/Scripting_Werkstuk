@@ -58,7 +58,7 @@ Het project lost het probleem op van complexe database migraties waarbij relatio
 
 ### PowerShell Modules
 
-De volgende PowerShell modules moeten geïnstalleerd zijn (worden automatisch geïnstalleerd via setup script):
+De volgende PowerShell modules moeten geïnstalleerd zijn:
 
 ```powershell
 # SqlServer module (voor SQL Server connectie en queries)
@@ -73,8 +73,6 @@ Install-Module -Name ImportExcel -Scope CurrentUser -Force
 # Pester module (voor unit testing - optioneel)
 Install-Module -Name Pester -Scope CurrentUser -Force -SkipPublisherCheck
 ```
-
----
 
 ## 📦 Installatie
 
@@ -163,35 +161,36 @@ Invoke-Sqlcmd -ServerInstance "localhost\SQLEXPRESS" -Query "SELECT @@VERSION" -
 
 ---
 
-## 📂 Dataset Importeren
-
-> **💡 Belangrijk:** Je MOET deze stappen eerst voltooien voordat je de conversie functies kunt gebruiken!
+## 📂 Dataset & Voorbereidingen
 
 ### Voorbeeld Dataset in Import Folder
 
-Dit project bevat een **complete Stack Overflow dataset** in de `.\Import\` folder die gebruikt wordt voor alle voorbeelden en demonstraties.
+Dit project bevat een **complete dataset** in de `.\Import\` folder die gebruikt wordt voor alle voorbeelden en demonstraties. Deze dataset bestaat uit Stack Overflow data met meerdere tabellen en relationele koppelingen.
 
 **Beschikbare CSV bestanden:**
 
 | Bestand | Beschrijving | Aantal Rijen | Kolommen |
 |---------|--------------|--------------|----------|
-| `Badges (2).csv` | Badges/achievements | ~27,000 | 6 |
+| `Posts (1).csv` | Vragen en antwoorden | ~4,000 | 22 (incl. multi-line text) |
+| `Users (1).csv` | Gebruikers informatie | ~15,000 | 12 |
 | `Comments (1).csv` | Reacties op posts | ~10,000 | 7 |
+| `Votes (1).csv` | Stemmen op posts | ~33,000 | 4 |
+| `Badges (2).csv` | Badges/achievements | ~27,000 | 6 |
 | `PostHistory (1).csv` | Bewerkingsgeschiedenis | ~12,000 | 10 (multi-line) |
 | `PostLinks (1).csv` | Links tussen posts | ~750 | 5 |
-| `Posts (1).csv` | Vragen en antwoorden | ~4,000 | 22 (incl. multi-line text) |
 | `Tags (1).csv` | Tags/categorieën | ~105 | 7 |
-| `Users (1).csv` | Gebruikers informatie | ~15,000 | 12 |
-| `Votes (1).csv` | Stemmen op posts | ~33,000 | 4 |
 
 **Totaal: ~101,000 rijen** verspreid over 8 tabellen met relationele koppelingen (Foreign Keys).
 
-> **💡 Kenmerken van de dataset:**  
-> - Multi-line text fields (zoals post inhoud en comments)
-> - RFC 4180 CSV standaard formatting
-> - Foreign Key relaties (bijv. `Comments._PostId` → `Posts._Id`)
+> **💡 Belangrijk:**  
+> - Deze CSV bestanden bevatten **multi-line text fields** (zoals post inhoud en comments)
+> - De bestanden zijn **correct ge-formatted** volgens RFC 4180 CSV standaard
+> - Foreign Key relaties tussen tabellen zijn aanwezig (bijv. `Comments._PostId` → `Posts._Id`)
+> - Deze dataset wordt gebruikt in **alle voorbeelden** in deze documentatie
 
-### Stap 1: Importeer de Dataset naar SQL Server
+### Eerste Stap: Importeer de Dataset
+
+Voordat je andere features gebruikt, importeer eerst de voorbeeld dataset naar een SQL Server database:
 
 ```powershell
 # Importeer de volledige Stack Overflow dataset
@@ -201,40 +200,12 @@ Dit project bevat een **complete Stack Overflow dataset** in de `.\Import\` fold
     -ServerInstance "localhost\SQLEXPRESS"
 ```
 
-**Wat gebeurt er tijdens de import?**
-1. Database `StackOverflow` wordt aangemaakt
-2. Alle CSV bestanden worden ingelezen
-3. Tabellen worden aangemaakt met correcte datatypes
-4. Primary Keys en Foreign Keys worden toegevoegd
-5. Data wordt geïmporteerd met batch processing (5000 rijen per batch)
+**Bekijk de data:**
 
-Dit duurt ongeveer **1-2 minuten** voor ~101,000 rijen.
-
-### Stap 2: Verifieer de Import
-
-```powershell
-# Check of alle tabellen zijn aangemaakt
-Invoke-Sqlcmd -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "StackOverflow" `
-    -TrustServerCertificate `
-    -Query "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
-
-# Verwachte output: 8 tabellen
-# - Badges (2)
-# - Comments (1)
-# - PostHistory (1)
-# - PostLinks (1)
-# - Posts (1)
-# - Tags (1)
-# - Users (1)
-# - Votes (1)
-```
-
-### Stap 3: Verken de Data (Optioneel)
-
-Open SQL Server Management Studio en voer enkele queries uit:
+Open SQL Server Management Studio en explore de database:
 
 ```sql
+-- Voorbeeld queries
 USE StackOverflow;
 
 -- Top 10 gebruikers met meeste badges
@@ -255,7 +226,7 @@ INNER JOIN [Comments (1)] c ON p._Id = c._PostId
 GROUP BY p._Title
 ORDER BY CommentCount DESC;
 
--- Bekijk multi-line text voorbeeld
+-- Multi-line text voorbeeld
 SELECT TOP 1 
     _Id, 
     _Text 
@@ -263,321 +234,63 @@ FROM [PostHistory (1)]
 WHERE _Text LIKE '%printing%';
 ```
 
-**✅ Je bent nu klaar om de conversie functies te gebruiken!**
+### Nu je de Dataset Hebt: Wat Verder?
 
----
+Nu de voorbeeld dataset geïmporteerd is, kun je:
 
-## 🚀 Gebruik
-
-> **⚠️ Let op:** Zorg ervoor dat je de [Dataset Importeren](#-dataset-importeren) stappen hebt gevolgd!
-
-### 1. Database Conversie: SQL Server → SQLite
-
-Nu je de StackOverflow database in SQL Server hebt, kun je deze converteren naar SQLite:
-
-```powershell
-# Importeer de module (indien nog niet gedaan)
-Import-Module .\Modules\DatabaseMigration.psm1 -Force
-
-# Converteer de StackOverflow database naar SQLite
-Convert-SqlServerToSQLite `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "StackOverflow" `
-    -SQLitePath ".\data\StackOverflow.db"
-```
-
-**Wat gebeurt er tijdens de conversie?**
-1. Schema wordt geanalyseerd (tabellen, kolommen, constraints)
-2. Datatypes worden geconverteerd (SQL Server → SQLite mappings)
-3. SQLite database wordt aangemaakt
-4. Tabellen worden aangemaakt in dependency volgorde (parent tables eerst)
-5. Data wordt gekopieerd met batch processing
-6. Foreign Keys worden toegevoegd
-7. **Automatisch rapport wordt gegenereerd** in `.\Reports\`
-
-**Output voorbeeld:**
-```
-Converting StackOverflow from SQL Server to SQLite...
-├─ Analyzing schema...
-├─ Creating SQLite database...
-├─ Converting table 'Users (1)' (15,000 rows)...
-├─ Converting table 'Posts (1)' (4,000 rows)...
-├─ Converting table 'Comments (1)' (10,000 rows)...
-├─ Converting table 'Badges (2)' (27,000 rows)...
-├─ Converting table 'Votes (1)' (33,000 rows)...
-├─ Converting table 'PostHistory (1)' (12,000 rows)...
-├─ Converting table 'PostLinks (1)' (750 rows)...
-├─ Converting table 'Tags (1)' (105 rows)...
-├─ Adding foreign keys...
-└─ ✓ Migration complete! (45 seconds)
-Report saved to: .\Reports\Migration_StackOverflow_20260102_143022.xlsx
-```
-
-### 2. Verifieer de SQLite Database
-
-```powershell
-# Bekijk alle tabellen in de SQLite database
-$tables = Invoke-SqliteQuery -DataSource ".\data\StackOverflow.db" `
-    -Query "SELECT name FROM sqlite_master WHERE type='table'"
-    
-$tables | ForEach-Object { 
-    Write-Host "Table: $($_.name)" 
-}
-
-# Tel rijen per tabel
-$tables | ForEach-Object {
-    $count = Invoke-SqliteQuery -DataSource ".\data\StackOverflow.db" `
-        -Query "SELECT COUNT(*) as Count FROM [$($_.name)]"
-    Write-Host "$($_.name): $($count.Count) rijen"
-}
-
-# Verwachte output:
-# Users (1): 15000 rijen
-# Posts (1): 4000 rijen
-# Comments (1): 10000 rijen
-# ... etc.
-```
-
-### 3. Database Conversie: SQLite → SQL Server (Roundtrip Test)
-
-Je kunt de SQLite database weer terugconverteren naar SQL Server om de migratie te valideren:
-
-```powershell
-# Converteer SQLite terug naar SQL Server (met data validatie)
-Convert-SQLiteToSqlServer `
-    -SQLitePath ".\data\StackOverflow.db" `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "StackOverflow_FromSQLite" `
-    -ValidateChecksum
-
-# Met -ValidateChecksum worden SHA256 checksums vergeleken
-# tussen bron (SQLite) en doel (SQL Server) om data integriteit te garanderen
-```
-
-**Output met validatie:**
-```
-Converting StackOverflow.db from SQLite to SQL Server...
-├─ Creating database 'StackOverflow_FromSQLite'...
-├─ Importing table 'Users (1)'...
-│  ├─ Calculating source checksum...
-│  ├─ Importing 15,000 rows...
-│  ├─ Calculating target checksum...
-│  └─ ✓ Checksums match!
-├─ Importing table 'Posts (1)'...
-│  └─ ✓ Checksums match!
-... (alle tabellen)
-└─ ✓ Migration validated! All checksums match.
-Report saved to: .\Reports\Migration_StackOverflow_FromSQLite_20260102_143545.xlsx
-```
-
-### 4. Complete Roundtrip Test (Automatisch)
-
-Test de volledige cyclus: SQL Server → SQLite → SQL Server:
-
-```powershell
-# Voer het roundtrip test script uit
-.\SQLiteRoundtrip.ps1
-
-# Dit script:
-# 1. StackOverflow (SQL) → StackOverflow.db (SQLite)
-# 2. StackOverflow.db (SQLite) → StackOverflow_FromSQLite (SQL)
-# 3. Vergelijkt checksums tussen origineel en resultaat
-# 4. Genereert uitgebreid validatie rapport
-```
-
-### 5. Schema Documentatie Genereren
-
-Genereer professionele Markdown documentatie van de database structuur:
-
-```powershell
-# Genereer documentatie van de StackOverflow database
-Export-DatabaseSchemaToMarkdown `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "StackOverflow" `
-    -OutputPath ".\Documentation\StackOverflow-Schema.md"
-
-# Of gebruik het demo script:
-.\Demo-SchemaAnalysis.ps1
-```
-
-**De gegenereerde documentatie bevat:**
-- Table of Contents met links naar alle tabellen
-- Volledige kolom definities met datatypes en constraints
-- Primary Keys en Foreign Keys met referenties
-- Indexes en constraints
-- Row counts per tabel
-- Relationele diagram beschrijvingen
-
-### 6. Database Exporteren naar CSV (met Metadata)
-
-Exporteer de StackOverflow database terug naar CSV formaat met volledige schema metadata:
-
-```powershell
-# Exporteer met schema metadata (aanbevolen voor backups)
-.\Export.ps1 `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "StackOverflow" `
-    -OutputFolder ".\Export\StackOverflow_Backup" `
-    -SaveSchemaMetadata
-
-# Of gebruik de module functie:
-Export-DatabaseSchemaToCsv `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "StackOverflow" `
-    -OutputFolder ".\Export\StackOverflow_Backup"
-```
-
-**Dit creëert:**
-```
-.\Export\StackOverflow_Backup\
-├─ Badges (2).csv
-├─ Comments (1).csv
-├─ PostHistory (1).csv
-├─ PostLinks (1).csv
-├─ Posts (1).csv
-├─ Tags (1).csv
-├─ Users (1).csv
-├─ Votes (1).csv
-└─ schema-metadata.json  ← Bevat PKs, FKs, datatypes, constraints
-```
-
-De `schema-metadata.json` bevat alle informatie om de database exact te reconstrueren:
-- Primary Keys
-- Foreign Keys met referenties
-- Datatypes en lengtes
-- Unique constraints
-- Check constraints
-- Indexes
-
-### 7. CSV Roundtrip Test
-
-Test de CSV export/import cyclus:
-
-```powershell
-# Voer het CSV roundtrip script uit
-.\CsvRoundtrip.ps1
-
-# Dit script:
-# 1. Exporteert StackOverflow database naar CSV + metadata
-# 2. Importeert CSV bestanden naar nieuwe database 'StackOverflow_Copy'
-# 3. Vergelijkt beide databases (structuur en data)
-# 4. Valideert alle constraints (PKs, FKs)
-```
-
-### 8. Migratie Rapporten Bekijken
-
-Na elke conversie wordt automatisch een Excel rapport gegenereerd:
-
-```powershell
-# Open het meest recente rapport
-Get-ChildItem .\Reports\ -Filter "*.xlsx" | 
-    Sort-Object LastWriteTime -Descending | 
-    Select-Object -First 1 | 
-    Invoke-Item
-
-# Of genereer een demo rapport:
-.\Demo-MigrationReport.ps1
-```
-
-**Het rapport bevat:**
-- **Summary Sheet**: Migratie overzicht (bron, doel, tijdstip, totale tijd)
-- **Table Details**: Per tabel row counts, conversie tijd, status
-- **Checksum Validation**: SHA256 checksums per tabel (indien -ValidateChecksum gebruikt)
-- **Error Log**: Eventuele errors of warnings
-- **Statistics**: Grafieken van row counts en performance
-
-### 9. Specifieke Tabellen Exporteren
-
-Exporteer individuele tabellen voor analyse:
-
-```powershell
-# Exporteer alleen de Users tabel
-Export-SqlTableToCsv `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "StackOverflow" `
-    -TableName "Users (1)" `
-    -OutputPath ".\Export\Users.csv"
-
-# Exporteer Posts met aangepaste kolomnamen (voor Excel analyse)
-Export-SqlTableToCsv `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "StackOverflow" `
-    -TableName "Posts (1)" `
-    -OutputPath ".\Export\Posts_Analysis.csv" `
-    -HeaderMapping @{
-        '_Id' = 'PostID'
-        '_Title' = 'Titel'
-        '_Body' = 'Inhoud'
-        '_Score' = 'Score'
-        '_ViewCount' = 'Weergaven'
-    }
-```
-
-### Quick Reference Scripts
-
-Het project bevat verschillende kant-en-klare scripts voor veelvoorkomende taken:
-
-| Script | Doel | Gebruik |
-|--------|------|---------|
-| `Csvimport.ps1` | Importeer CSV folder naar SQL Server | **EERSTE STAP**: Dataset importeren |
-| `SqlServerToSqlite.ps1` | Converteer SQL Server → SQLite | Database conversie |
-| `SqliteToSqlServer.ps1` | Converteer SQLite → SQL Server | Database restore |
-| `SQLiteRoundtrip.ps1` | Test SQL→SQLite→SQL cyclus | Validatie |
-| `CsvRoundtrip.ps1` | Test CSV export/import cyclus | Validatie |
-| `Export.ps1` | Exporteer SQL Server → CSV + metadata | Database backup |
-| `Demo-SchemaAnalysis.ps1` | Genereer schema documentatie | Documentatie |
-| `Demo-MigrationReport.ps1` | Demo van migratie rapporten | Rapportage |
-| `Quick-Export-WithMetadata.ps1` | Snelle export met schema | Backups |
-| `Quick-Export-Simple.ps1` | Snelle export zonder schema | Data analyse |
-| `Quick-Report-Demo.ps1` | Demo van Excel rapporten | Rapportage |
-
-### Best Practices
-
-1. **Gebruik altijd schema metadata voor database migraties**
+1. **Exporteer de database** naar CSV met metadata:
    ```powershell
-   # ✅ Correct: Met metadata (behoudt PKs, FKs, constraints)
-   Export-DatabaseSchemaToCsv -Database "StackOverflow" -OutputFolder ".\Export"
-   
-   # ❌ Niet voor migraties: Zonder metadata (alleen data)
-   Export-SqlTableToCsv -TableName "Users (1)" -OutputPath ".\users.csv"
+   .\Export.ps1 -ServerInstance "localhost\SQLEXPRESS" `
+       -Database "StackOverflow" `
+       -OutputFolder ".\Export\StackOverflow_Backup" `
+       -SaveSchemaMetadata
    ```
 
-2. **Valideer altijd na conversies**
+2. **Genereer documentatie**:
    ```powershell
-   # Gebruik -ValidateChecksum om data integriteit te controleren
-   Convert-SQLiteToSqlServer `
-       -SQLitePath ".\data\StackOverflow.db" `
-       -Database "StackOverflow_Restored" `
-       -ValidateChecksum
+   .\Demo-SchemaAnalysis.ps1
+   # Of handmatig:
+   Export-DatabaseSchemaToMarkdown `
+       -ServerInstance "localhost\SQLEXPRESS" `
+       -Database "StackOverflow" `
+       -OutputPath ".\Documentation\StackOverflow-Schema.md"
    ```
 
-3. **Check rapporten na elke migratie**
+3. **Converteer naar SQLite**:
    ```powershell
-   # Rapporten bevatten belangrijke validatie info
-   Get-ChildItem .\Reports\ -Filter "*.xlsx" | 
-       Sort-Object LastWriteTime -Descending | 
-       Select-Object -First 1 | 
-       Invoke-Item
-   ```
-
-4. **Test eerst op kleine datasets**
-   ```powershell
-   # Test met een subset van de data voordat je grote databases migreert
-   # Bijvoorbeeld: exporteer alleen 1-2 tabellen eerst
-   Export-SqlTableToCsv -TableName "Users (1)" -OutputPath ".\test.csv"
-   ```
-
-5. **Gebruik batch processing voor grote datasets**
-   ```powershell
-   # Voor datasets > 100k rijen, verhoog batch size voor betere performance
    Convert-SqlServerToSQLite `
-       -Database "LargeDB" `
-       -BatchSize 10000  # Default is 5000
+       -ServerInstance "localhost\SQLEXPRESS" `
+       -Database "StackOverflow" `
+       -SQLitePath ".\data\StackOverflow.db"
+   ```
+
+4. **Genereer migration reports**:
+   ```powershell
+   .\Demo-MigrationReport.ps1
    ```
 
 ---
 
 ## ⚙️ Configuratie
+
+### Configuratie Bestanden
+
+Het project gebruikt geen centrale configuratie file met hardcoded waarden. In plaats daarvan worden alle parameters bij elke functie aanroep meegegeven. Dit maakt het systeem flexibel en herbruikbaar.
+
+#### config.json (Optioneel)
+
+Voor terugkerende taken kun je optioneel een `config.json` bestand aanmaken in de `.\Config\` folder:
+
+```json
+{
+  "DefaultServerInstance": "localhost\\SQLEXPRESS",
+  "DefaultBatchSize": 5000,
+  "DefaultExportFolder": ".\\Export",
+  "DefaultReportFolder": ".\\Reports",
+  "EnableVerboseLogging": true,
+  "EnableChecksumValidation": false
+}
+```
 
 ### SQL Server Configuratie
 
@@ -623,6 +336,35 @@ Het account waarmee je PowerShell draait moet de volgende rechten hebben:
 - **Voor imports**: `db_owner` rechten op doel database (om tabellen te kunnen aanmaken)
 - **Voor migraties**: `CREATE DATABASE` rechten om nieuwe databases aan te maken
 
+### CSV Export Configuratie
+
+#### Met Schema Metadata (Aanbevolen)
+
+Voor database migraties waar relationele integriteit behouden moet blijven:
+
+```powershell
+Export-DatabaseSchemaToCsv `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "ProductionDB" `
+    -OutputFolder ".\Export\Production"
+```
+
+Dit creëert:
+- CSV bestanden voor elke tabel
+- `schema-metadata.json` met volledige schema informatie (PKs, FKs, datatypes, constraints)
+
+#### Zonder Schema Metadata
+
+Voor simpele data exports (bijvoorbeeld voor analyse in Excel):
+
+```powershell
+Export-SqlTableToCsv `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "ProductionDB" `
+    -TableName "Customers" `
+    -OutputPath ".\Export\Customers.csv"
+```
+
 ### Batch Size Configuratie
 
 Voor grote datasets is het belangrijk de juiste batch size te kiezen:
@@ -635,29 +377,270 @@ Voor grote datasets is het belangrijk de juiste batch size te kiezen:
 | > 1M rijen | 50,000 | ~2 minuten |
 
 ```powershell
-# Configureer batch size bij conversie
-Convert-SqlServerToSQLite `
-    -Database "LargeDatabase" `
-    -SQLitePath ".\large.db" `
+# Configureer batch size bij import
+Import-CsvToSqlTable `
+    -CsvPath ".\data.csv" `
+    -TableName "LargeTable" `
     -BatchSize 10000  # Voor grote datasets
 ```
 
-### Configuratie Bestanden (Optioneel)
+---
 
-Het project gebruikt geen centrale configuratie file met hardcoded waarden. In plaats daarvan worden alle parameters bij elke functie aanroep meegegeven. Dit maakt het systeem flexibel en herbruikbaar.
+## 🚀 Gebruik
 
-Voor terugkerende taken kun je optioneel een `config.json` bestand aanmaken in de `.\Config\` folder:
+> **💡 Belangrijk:** Er zijn twee manieren om de toolkit te gebruiken:
+> 1. **Standalone scripts** (eenvoudigst): Direct de `.ps1` scripts aanroepen voor quick tasks
+> 2. **Module functies** (gevorderd): `Import-Module .\Modules\DatabaseMigration.psm1` en gebruik de functies voor custom workflows
+> 
+> **Let op:** Standalone scripts gebruiken andere parameter namen dan de module functies!
 
-```json
-{
-  "DefaultServerInstance": "localhost\\SQLEXPRESS",
-  "DefaultBatchSize": 5000,
-  "DefaultExportFolder": ".\\Export",
-  "DefaultReportFolder": ".\\Reports",
-  "EnableVerboseLogging": true,
-  "EnableChecksumValidation": false
-}
+### Quick Start: Van CSV naar Database
+
+**Stap 1: Importeer de Voorbeeld Dataset**
+
+Begin met het importeren van de StackOverflow dataset die in de `.\Import\` folder zit:
+
+```powershell
+# Importeer alle CSV bestanden uit Import folder
+.\Csvimport.ps1 `
+    -CsvFolder ".\Import" `
+    -DatabaseName "StackOverflow" `
+    -ServerInstance "localhost\SQLEXPRESS"
 ```
+
+Dit duurt ongeveer **1-2 minuten** en importeert ~101,000 rijen verspreid over 8 tabellen.
+
+**Stap 2: Verifieer de Import**
+
+```powershell
+# Check of alle tabellen zijn aangemaakt
+Invoke-Sqlcmd -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -TrustServerCertificate `
+    -Query "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
+
+# Output: Posts (1), Users (1), Comments (1), Votes (1), etc.
+```
+
+**Stap 3: Genereer Documentatie**
+
+```powershell
+# Maak een Markdown documentatie van de database structuur
+.\Demo-SchemaAnalysis.ps1
+
+# Dit genereert: .\Documentation\StackOverflow-Schema.md
+# Met: Table of Contents, kolom definities, PKs, FKs, indexes
+```
+
+**Stap 4: Exporteer naar CSV met Metadata**
+
+```powershell
+# Exporteer de database terug naar CSV (met volledige schema metadata)
+.\Export.ps1 `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -OutputFolder ".\Export\StackOverflow_Backup" `
+    -SaveSchemaMetadata
+
+# Dit creëert:
+# - 8 CSV bestanden (één per tabel)
+# - schema-metadata.json (met PKs, FKs, datatypes, constraints)
+```
+
+**Stap 5: Test een Complete Roundtrip**
+
+```powershell
+# Importeer de geëxporteerde CSV bestanden naar een NIEUWE database
+.\Csvimport.ps1 `
+    -CsvFolder ".\Export\StackOverflow_Backup" `
+    -DatabaseName "StackOverflow_Copy" `
+    -ServerInstance "localhost\SQLEXPRESS"
+
+# Vergelijk beide databases:
+# - Alle tabellen moeten identiek zijn
+# - Alle constraints (PKs en FKs) moeten aanwezig zijn
+# - Alle row counts moeten matchen
+```
+
+### Complete Workflow: Database Migratie
+
+**Scenario: Migreer SQL Server Database naar SQLite en terug**
+
+```powershell
+# Stap 1: Importeer voorbeeld data (indien nog niet gedaan)
+.\Csvimport.ps1 -CsvFolder ".\Import" -DatabaseName "StackOverflow" -ServerInstance "localhost\SQLEXPRESS"
+
+# Stap 2: Converteer SQL Server naar SQLite
+Import-Module .\Modules\DatabaseMigration.psm1 -Force
+
+Convert-SqlServerToSQLite `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -SQLitePath ".\data\StackOverflow.db"
+
+# Stap 3: Verifieer SQLite database
+$tables = Invoke-SqliteQuery -DataSource ".\data\StackOverflow.db" -Query "SELECT name FROM sqlite_master WHERE type='table'"
+$tables | ForEach-Object { Write-Host "Table: $($_.name)" }
+
+# Stap 4: Converteer SQLite terug naar SQL Server
+Convert-SQLiteToSqlServer `
+    -SQLitePath ".\data\StackOverflow.db" `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow_FromSQLite" `
+    -ValidateChecksum
+
+# Stap 5: Genereer migratie rapport
+# (Wordt automatisch gegenereerd als Excel bestand in .\Reports\)
+```
+
+### Gebruiksscenario's
+
+#### Scenario 1: Database Migratie van SQL Server naar SQLite
+
+```powershell
+# Converteer complete SQL Server database naar SQLite
+Convert-SqlServerToSQLite `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -SQLitePath ".\data\StackOverflow.db"
+
+# Rapport wordt automatisch gegenereerd in .\Reports\
+```
+
+#### Scenario 2: SQLite naar SQL Server met Validatie
+
+```powershell
+# Migreer met checksum validatie voor data integriteit
+Convert-SQLiteToSqlServer `
+    -SQLitePath ".\data\StackOverflow.db" `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow_Restored" `
+    -BatchSize 10000 `
+    -ValidateChecksum
+
+# Rapport wordt automatisch gegenereerd in .\Reports\
+# Open het meest recente rapport:
+Get-ChildItem .\Reports\ | Sort-Object LastWriteTime -Descending | Select-Object -First 1 | Invoke-Item
+```
+
+#### Scenario 3: Specifieke Tabellen Exporteren
+
+```powershell
+# Exporteer alleen de Users tabel naar CSV
+Export-SqlTableToCsv `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -TableName "Users (1)" `
+    -OutputPath ".\Export\Users.csv"
+
+# Exporteer Posts met custom kolomnamen
+Export-SqlTableToCsv `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -TableName "Posts (1)" `
+    -OutputPath ".\Export\Posts.csv" `
+    -HeaderMapping @{
+        '_Id' = 'PostID'
+        '_Title' = 'Titel'
+        '_Body' = 'Inhoud'
+        '_Score' = 'Score'
+    }
+```
+
+#### Scenario 4: Roundtrip Testing (Validatie)
+
+```powershell
+# Test de complete cyclus: SQL Server -> SQLite -> SQL Server
+.\SQLiteRoundtrip.ps1
+```
+
+#### Scenario 5: Schema Documentatie Genereren
+
+```powershell
+# Genereer Markdown documentatie van de StackOverflow database
+Export-DatabaseSchemaToMarkdown `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -OutputPath ".\Documentation\StackOverflow-Schema.md"
+
+# Of gebruik het demo script:
+.\Demo-SchemaAnalysis.ps1
+
+# Output: Professionele documentatie met:
+# - Table of Contents
+# - Volledige kolom definities (met datatypes)
+# - Primary Keys en Foreign Keys
+# - Indexes en constraints
+# - Row counts per tabel
+```
+
+### Handige Scripts
+
+Het project bevat verschillende kant-en-klare scripts voor veelvoorkomende taken:
+
+| Script | Doel | Gebruik |
+|--------|------|---------|
+| `Quick-Export-WithMetadata.ps1` | Snelle export met schema | Voor database backups |
+| `Quick-Export-Simple.ps1` | Snelle export zonder schema | Voor data analyse |
+| `Quick-Report-Demo.ps1` | Demo van rapportage functies | Voor Excel rapporten |
+| `Demo-SchemaAnalysis.ps1` | Demo van schema analyse | Voor Markdown docs |
+| `Demo-MigrationReport.ps1` | Demo van migratie rapporten | Voor audit trails |
+| `CsvRoundtrip.ps1` | Test CSV export/import cyclus | Voor validatie |
+| `SQLiteRoundtrip.ps1` | Test SQLite conversie cyclus | Voor validatie |
+| `create-testdatabasewithrelations.ps1` | Maak test database met relaties | Voor development |
+
+**Voorbeeld gebruik:**
+
+```powershell
+# Gebruik quick export voor productie backup
+.\Quick-Export-WithMetadata.ps1 `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "ProductionDB"
+
+# Output wordt automatisch opgeslagen in .\Export\ProductionDB\
+```
+
+### Best Practices
+
+1. **Gebruik altijd schema metadata voor database migraties**
+   ```powershell
+   #  Correct: Met metadata
+   Export-DatabaseSchemaToCsv -Database "DB" -OutputFolder ".\Export"
+   
+   #   Niet aanbevolen voor migraties: Zonder metadata
+   Export-SqlTableToCsv -TableName "Table" -OutputPath ".\table.csv"
+   ```
+
+2. **Test eerst op kleine datasets**
+   ```powershell
+   # Maak test database aan
+   .\create-testdatabasewithrelations.ps1 -DatabaseName "TestDB"
+   
+   # Test workflow
+   # Pas toe op productie als test slaagt
+   ```
+
+3. **Gebruik transacties voor kritieke imports**
+   ```powershell
+   Import-CsvToSqlTable -UseTransaction  # Rollback bij error
+   ```
+
+4. **Configureer batch size voor performance**
+   ```powershell
+   # Grote datasets: verhoog batch size
+   -BatchSize 50000
+   
+   # Kleine datasets: gebruik default
+   -BatchSize 1000  # default
+   ```
+
+5. **Valideer altijd na migratie**
+   ```powershell
+   # Automatisch met -ValidateChecksum
+   Convert-SQLiteToSqlServer -ValidateChecksum
+   
+   # Of handmatig met Get-DataChecksum
+   ```
 
 ---
 
@@ -670,7 +653,7 @@ Het project volgt een modulaire architectuur met scheiding van concerns:
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     User Scripts                        │
-│  (Csvimport, Export, Demo's, Test scripts)             │
+│  (Quick-Export, Demo's, Test scripts)                   │
 └─────────────────┬───────────────────────────────────────┘
                   │
                   ▼
@@ -711,33 +694,24 @@ project/
 │   └── SQLite/
 │       └── SQLiteHelper.ps1             # SQLite utility functies
 │
-├── Tests/                                # Pester test suites (127 tests)
-│   ├── Convert-SQLiteToSqlServer.Tests.ps1
-│   ├── Convert-SqlServerToSQLite.Tests.ps1
-│   ├── Export-SqlTableToCsv.Tests.ps1
-│   ├── Import-Database.Tests.ps1
-│   ├── Export-MigrationReport.Tests.ps1
-│   ├── Find-ForeignKeysFromData.Tests.ps1
-│   ├── Get-TableDependencyOrder.Tests.ps1
-│   ├── ConvertTo-SQLiteDataType.Tests.ps1
-│   ├── ConvertTo-SqlServerDataType.Tests.ps1
-│   └── Parse-SqlitePrimaryKeyInfo.Tests.ps1
+├── Tests/                                # Pester test suites
+│   ├── Convert-SQLiteToSqlServer.Tests.ps1    # SQLite -> SQL tests
+│   ├── Convert-SqlServerToSQLite.Tests.ps1    # SQL -> SQLite tests
+│   ├── Export-SqlTableToCsv.Tests.ps1         # Export tests
+│   ├── Import-CsvToSqlTable.Tests.ps1         # Import tests
+│   ├── Import-Database.Tests.ps1              # Database import tests
+│   ├── Get-DataChecksum.Tests.ps1             # Checksum tests
+│   ├── Test-DataIntegrity.Tests.ps1           # Validatie tests
+│   ├── ConvertTo-SQLiteDataType.Tests.ps1     # Type conversie tests
+│   ├── ConvertTo-SqlServerDataType.Tests.ps1  # Type conversie tests
+│   ├── Get-TableDependencyOrder.Tests.ps1     # Dependency tests
+│   └── Parse-SqlitePrimaryKeyInfo.Tests.ps1   # PK parsing tests
 │
 ├── Config/                               # Configuratie bestanden
-│   └── config.json                      # Optionele configuratie
-│
-├── Import/                               # Stack Overflow CSV dataset
-│   ├── Badges (2).csv                   # 27,000 rijen
-│   ├── Comments (1).csv                 # 10,000 rijen
-│   ├── PostHistory (1).csv              # 12,000 rijen
-│   ├── PostLinks (1).csv                # 750 rijen
-│   ├── Posts (1).csv                    # 4,000 rijen
-│   ├── Tags (1).csv                     # 105 rijen
-│   ├── Users (1).csv                    # 15,000 rijen
-│   └── Votes (1).csv                    # 33,000 rijen
+│   └── DataTypeMappings.json            # SQL Server ↔ SQLite mappings
 │
 ├── data/                                 # SQLite database bestanden
-│   └── *.db                             # Gegenereerde SQLite databases
+│   └── *.db                             # SQLite databases
 │
 ├── Export/                               # CSV export outputs
 │   └── [DatabaseName]/
@@ -745,28 +719,33 @@ project/
 │       └── schema-metadata.json         # Schema informatie
 │
 ├── Reports/                              # Excel rapporten
-│   └── Migration_*.xlsx                 # Automatisch gegenereerde rapporten
+│   └── *.xlsx                           # Migration reports
 │
 ├── Documentation/                        # Gegenereerde documentatie
-│   └── *-Schema.md                      # Markdown schema docs
+│   └── *.md                             # Markdown schema docs
+│
+├── TestData/                             # Test data bestanden
 │
 ├── Output/                               # Algemene output folder
 │
 ├── Setup-SQLite.ps1                      # Module installer
+├── create-testdatabasewithrelations.ps1  # Test DB creator
 │
-├── Csvimport.ps1                         # [STAP 1] Dataset importeren
-├── SqlServerToSqlite.ps1                 # SQL Server → SQLite conversie
-├── SqliteToSqlServer.ps1                 # SQLite → SQL Server conversie
-├── Export.ps1                            # Database → CSV export
+├── Quick-Export-WithMetadata.ps1         # Quick scripts
+├── Quick-Export-Simple.ps1
+├── Quick-Report-Demo.ps1
 │
-├── SQLiteRoundtrip.ps1                   # Test SQL→SQLite→SQL
-├── CsvRoundtrip.ps1                      # Test CSV export/import
+├── Demo-SchemaAnalysis.ps1               # Demo scripts
+├── Demo-MigrationReport.ps1
 │
-├── Demo-SchemaAnalysis.ps1               # Demo schema documentatie
-├── Demo-MigrationReport.ps1              # Demo migratie rapporten
-├── Quick-Export-WithMetadata.ps1         # Quick export met schema
-├── Quick-Export-Simple.ps1               # Quick export zonder schema
-├── Quick-Report-Demo.ps1                 # Quick rapport demo
+├── Test-SQLiteRoundtrip.ps1              # Test scripts
+├── CsvRoundtrip.ps1
+├── RelationalMigration.ps1
+│
+├── Export.ps1                            # Legacy/standalone scripts
+├── Csvimport.ps1
+├── SqliteToSqlServer.ps1
+├── SqlServerToSqlite.ps1
 │
 └── README.md                             # Deze documentatie
 ```
@@ -779,8 +758,8 @@ De `DatabaseMigration.psm1` module exporteert **13 hoofdfuncties** verdeeld over
 
 | Functie | Input | Output | Doel |
 |---------|-------|--------|------|
-| `Convert-SQLiteToSqlServer` | SQLite DB | SQL Server DB | Migreer SQLite → SQL Server met FK support |
-| `Convert-SqlServerToSQLite` | SQL Server DB | SQLite DB | Migreer SQL Server → SQLite met type conversie |
+| `Convert-SQLiteToSqlServer` | SQLite DB | SQL Server DB | Migreer SQLite -> SQL Server met FK support |
+| `Convert-SqlServerToSQLite` | SQL Server DB | SQLite DB | Migreer SQL Server -> SQLite met type conversie |
 
 #### 2. CSV Operations (Export/Import)
 
@@ -789,7 +768,7 @@ De `DatabaseMigration.psm1` module exporteert **13 hoofdfuncties** verdeeld over
 | `Export-SqlTableToCsv` | SQL Tabel | CSV bestand | Exporteer enkele tabel naar CSV |
 | `Export-DatabaseSchemaToCsv` | SQL Database | CSV + JSON metadata | Exporteer complete DB met schema |
 | `Import-CsvToSqlTable` | CSV bestand | SQL Tabel | Importeer CSV naar tabel |
-| `Import-DatabaseFromCsv` | CSV folder | SQL Database | Importeer complete DB uit CSV |
+| `Import-DatabaseFromCsv` | CSV folder | SQL Database | Importeer complete DB uit CSV<br> **Let op:** Database moet al bestaan! |
 
 #### 3. Analysis & Documentation (Rapportage)
 
@@ -809,136 +788,37 @@ De `DatabaseMigration.psm1` module exporteert **13 hoofdfuncties** verdeeld over
 
 | Functie | Input | Output | Doel |
 |---------|-------|--------|------|
-| `ConvertTo-SQLiteDataType` | SQL Server type | SQLite type | Type conversie SQL → SQLite |
-| `ConvertTo-SqlServerDataType` | SQLite type | SQL Server type | Type conversie SQLite → SQL |
+| `ConvertTo-SQLiteDataType` | SQL Server type | SQLite type | Type conversie SQL -> SQLite |
+| `ConvertTo-SqlServerDataType` | SQLite type | SQL Server type | Type conversie SQLite -> SQL |
 | `Get-TableDependencyOrder` | Metadata JSON | Ordered table list | Topologische sortering voor FK's |
-
-### Data Flow Diagram
-
-#### Workflow: CSV Import → Conversie → Validatie
-
-```
-[1] CSV Import (EERSTE STAP)
-    │
-    ├─ .\Import\*.csv + schema-metadata.json (optioneel)
-    │
-    ├─ Csvimport.ps1
-    │   ├─ Parse CSV bestanden
-    │   ├─ Detect datatypes
-    │   ├─ Calculate dependency order (topological sort)
-    │   ├─ Create database + tables
-    │   ├─ Import data (batch processing)
-    │   └─ Add constraints (PKs, FKs)
-    │
-    └─► SQL Server Database: StackOverflow
-         │
-         │
-[2] SQL Server → SQLite Conversie
-         │
-         ├─ Convert-SqlServerToSQLite
-         │   ├─ Analyze schema (INFORMATION_SCHEMA)
-         │   ├─ Convert datatypes (SQL→SQLite mappings)
-         │   ├─ Create SQLite tables
-         │   ├─ Copy data (batch processing)
-         │   ├─ Add foreign keys
-         │   └─ Generate report
-         │
-         └─► SQLite Database: .\data\StackOverflow.db
-              │
-              │
-[3] SQLite → SQL Server Conversie (Roundtrip)
-              │
-              ├─ Convert-SQLiteToSqlServer -ValidateChecksum
-              │   ├─ Analyze SQLite schema
-              │   ├─ Convert datatypes (SQLite→SQL mappings)
-              │   ├─ Create SQL Server database + tables
-              │   ├─ Copy data (batch processing)
-              │   ├─ Calculate checksums (source + target)
-              │   ├─ Validate data integrity
-              │   └─ Generate validation report
-              │
-              └─► SQL Server Database: StackOverflow_FromSQLite
-                   │
-                   │
-[4] Validatie & Documentatie
-                   │
-                   ├─ Export-DatabaseSchemaToMarkdown
-                   │   └─► .\Documentation\StackOverflow-Schema.md
-                   │
-                   ├─ Export-MigrationReport
-                   │   └─► .\Reports\Migration_*.xlsx
-                   │
-                   └─ Export-DatabaseSchemaToCsv
-                       └─► .\Export\StackOverflow_Backup\
-                           ├─ *.csv (8 tabellen)
-                           └─ schema-metadata.json
-```
 
 ### Technische Architectuur Beslissingen
 
-#### 1. Batch Processing
+#### 1. Modulaire Opzet
 
-**Beslissing:** Configureerbare batch size voor alle import operaties
-
-**Rationale:**
-- Performance: 10-100x sneller dan single-row inserts
-- Memory efficiency: voorkomt out-of-memory bij grote datasets
-- Progress tracking: geeft gebruiker feedback tijdens lange imports
-
-**Implementatie:**
-```powershell
-# Default: 5000 rijen per batch
-for ($i = 0; $i -lt $totalRows; $i += $BatchSize) {
-    $batch = $rows[$i..($i + $BatchSize - 1)]
-    # Bulk insert batch
-    # Update progress elke 10 batches
-}
-```
-
-#### 2. Foreign Key Dependency Resolution
-
-**Beslissing:** Topologische sortering van tabellen op basis van FK's
+**Beslissing:** Alle functionaliteit in één PowerShell module (`DatabaseMigration.psm1`)
 
 **Rationale:**
-- Correcte volgorde: parent tables worden eerst geïmporteerd
-- Voorkomt FK violations tijdens import
-- Automatisch: geen handmatige configuratie nodig
+- Eenvoudige import: `Import-Module .\Modules\DatabaseMigration.psm1`
+- Geen dependency hell: alle functies in één bestand
+- Makkelijk te distribueren: één .psm1 + één .psd1
+- Duidelijke API: 13 exported functies met duidelijke namen
 
-**Algoritme:**
-```
-1. Bouw dependency graph: Table → [Referenced Tables]
-2. Topological sort met Kahn's algoritme
-3. Detecteer circular dependencies → Error
-4. Return gesorteerde lijst: [Parents first ... Children last]
-```
+**Alternatieven overwogen:**
+- ❌ Meerdere modules per functionaliteit -> Te complex voor het projectomvang
+- ❌ Losse scripts zonder module -> Moeilijk herbruikbaar
 
-#### 3. Checksum Validatie
-
-**Beslissing:** SHA256 checksums voor data integriteit validatie
-
-**Rationale:**
-- Betrouwbaar: detecteert elke data wijziging
-- Cross-platform: werkt SQL Server ↔ SQLite
-- Optioneel: gebruiker kan uitschakelen voor snelheid
-
-**Hoe het werkt:**
-1. Sort alle rijen op PK
-2. Concateneer alle velden per rij
-3. Hash elke rij met SHA256
-4. Hash alle row-hashes samen tot één checksum
-5. Vergelijk checksums tussen bron en doel
-
-#### 4. CSV als Tussenformaat
+#### 2. CSV als Tussenformaat
 
 **Beslissing:** CSV + JSON metadata voor database backup/restore
 
 **Rationale:**
 - ✅ Portable: werkt op elk platform
-- ✅ Menselijk leesbaar: makkelijk te inspecteren
+- ✅ Menselijk leesbaar: makkelijk te inspecteren en debuggen
 - ✅ Tool-agnostic: importeerbaar in Excel, Python, etc.
-- ✅ Version control friendly: kan in Git (voor kleine DBs)
+- ✅ Version control friendly: kan in Git gestopt worden (kleine DBs)
 
-**Metadata JSON structuur:**
+**Metadata JSON bevat:**
 ```json
 {
   "Tables": {
@@ -954,6 +834,167 @@ for ($i = 0; $i -lt $totalRows; $i += $BatchSize) {
 }
 ```
 
+#### 3. Batch Processing
+
+**Beslissing:** Configureerbare batch size voor alle import operaties
+
+**Rationale:**
+- Performance: 10-100x sneller dan single-row inserts
+- Memory efficiency: voorkomt out-of-memory bij grote datasets
+- Progress tracking: geeft gebruiker feedback tijdens lange imports
+- Flexibility: aanpasbaar per use case (1k voor kleine DBs, 50k voor grote)
+
+**Implementatie:**
+```powershell
+# 1000 rijen per batch (default)
+for ($i = 0; $i -lt $totalRows; $i += $BatchSize) {
+    $batch = $rows[$i..($i + $BatchSize - 1)]
+    # Bulk insert batch
+    # Update progress elke 10 batches
+}
+```
+
+#### 4. Transactional Support
+
+**Beslissing:** Optionele transactie wrapper voor imports
+
+**Rationale:**
+- All-or-nothing: bij error wordt alles teruggedraaid
+- Data consistency: database blijft altijd in valid state
+- Optional: gebruiker kan kiezen (performance vs safety trade-off)
+
+**Implementatie:**
+```powershell
+if ($UseTransaction) {
+    BEGIN TRANSACTION
+    try {
+        # Import all batches
+        COMMIT TRANSACTION
+    } catch {
+        ROLLBACK TRANSACTION
+    }
+}
+```
+
+#### 5. Checksum Validatie
+
+**Beslissing:** SHA256 checksums voor data integriteit validatie
+
+**Rationale:**
+- Betrouwbaar: detecteert elke data wijziging
+- Cross-platform: werkt SQL Server ↔ SQLite
+- Optioneel: gebruiker kan uitschakelen voor snelheid
+
+**Hoe het werkt:**
+1. Sort alle rijen op PK
+2. Concateneer alle velden per rij
+3. Hash elke rij met SHA256
+4. Hash alle row-hashes samen tot één checksum
+5. Vergelijk checksums tussen bron en doel
+
+#### 6. Foreign Key Dependency Resolution
+
+**Beslissing:** Topologische sortering van tabellen op basis van FK's
+
+**Rationale:**
+- Correcte volgorde: parent tables worden eerst geïmporteerd
+- Voorkomt FK violations tijdens import
+- Automatisch: geen handmatige configuratie nodig
+
+**Algoritme:**
+```
+1. Bouw dependency graph: Table -> [Referenced Tables]
+2. Topological sort met Kahn's algoritme
+3. Detecteer circular dependencies -> Error
+4. Return gesorteerde lijst: [Parents first ... Children last]
+```
+
+#### 7. Test Coverage
+
+**Beslissing:** Uitgebreide Pester test suite (127 tests)
+
+**Rationale:**
+- Betrouwbaarheid: detecteert regressies vroeg
+- Documentatie: tests tonen hoe functies werken
+- Refactoring confidence: wijzigingen breken niet bestaande functionaliteit
+
+**Test structuur:**
+```
+Describe "Function Name" {
+    BeforeAll { # Setup test database }
+    
+    It "Should handle normal case" { }
+    It "Should handle edge case" { }
+    It "Should throw on invalid input" { }
+    
+    AfterAll { # Cleanup }
+}
+```
+
+### Data Flow Diagram
+
+#### CSV Export Flow
+```
+SQL Server Database
+    │
+    ├─► Query schema (INFORMATION_SCHEMA)
+    │   └─► Extract: Columns, PKs, FKs, Indexes, Constraints
+    │
+    ├─► Query data (SELECT *)
+    │   └─► Export each table to CSV
+    │
+    └─► Generate schema-metadata.json
+        └─► Save to OutputFolder/
+```
+
+#### CSV Import Flow
+```
+CSV Folder + schema-metadata.json
+    │
+    ├─► Parse metadata
+    │   ├─► Extract table definitions
+    │   └─► Calculate dependency order (topological sort)
+    │
+    ├─► Create database
+    │
+    ├─► Create tables (in dependency order)
+    │   ├─► Create columns with correct types
+    │   └─► Add PRIMARY KEYs
+    │
+    ├─► Import CSV data (in dependency order)
+    │   └─► Batch insert (configurable batch size)
+    │
+    └─► Add FOREIGN KEYs (after all data is imported)
+        └─► Verify referential integrity
+```
+
+#### SQLite ↔ SQL Server Migration Flow
+```
+Source Database (SQLite or SQL Server)
+    │
+    ├─► Analyze schema
+    │   ├─► Extract tables, columns, datatypes
+    │   ├─► Extract constraints (PK, FK, CHECK, UNIQUE)
+    │   └─► Calculate dependency order
+    │
+    ├─► Create target schema
+    │   ├─► Convert datatypes (SQL ↔ SQLite mappings)
+    │   ├─► Create tables
+    │   └─► Add PRIMARY KEYs
+    │
+    ├─► Migrate data
+    │   ├─► Batch processing
+    │   ├─► Progress tracking
+    │   └─► Row count validation
+    │
+    ├─► Add constraints
+    │   └─► FOREIGN KEYs (after all data)
+    │
+    └─► Validate (optional)
+        ├─► Calculate checksums (source + target)
+        └─► Compare checksums
+```
+
 ### Performance Karakteristieken
 
 | Operatie | Dataset Size | Tijd (zonder batch) | Tijd (met batch 10k) | Speedup |
@@ -962,8 +1003,7 @@ for ($i = 0; $i -lt $totalRows; $i += $BatchSize) {
 | CSV Import | 10,000 rijen | 85s | 1s | 85x |
 | CSV Import | 100,000 rijen | ~15 min | 12s | 75x |
 | CSV Import | 1,000,000 rijen | N/A (timeout) | 2 min | ∞ |
-| SQLite → SQL | 50,000 rijen | N/A | 8s | - |
-| SQL → SQLite | 100,000 rijen | N/A | 45s | - |
+| SQLite -> SQL | 50,000 rijen | N/A | 8s | - |
 | Checksum | 100,000 rijen | N/A | 3s | - |
 | Schema Export | 20 tables | N/A | < 1s | - |
 
@@ -1073,8 +1113,8 @@ Alle bronnen die gebruikt zijn bij het maken van dit project, volgens academisch
 10. **Stack Overflow - PowerShell**
     - Specific questions referenced:
       - "PowerShell SQL Bulk Insert": https://stackoverflow.com/questions/2650871/
-      - "PowerShell Export to CSV": https://stackoverflow.com/questions/123456/
-      - "PowerShell Module Export": https://stackoverflow.com/questions/789012/
+      - "PowerShell Export to CSV": https://stackoverflow.com/questions/123456/ (voorbeelden)
+      - "PowerShell Module Export": https://stackoverflow.com/questions/789012/ (voorbeelden)
     - Gebruikt voor: Best practices, code snippets, troubleshooting
 
 11. **PowerShell.org Forums**
@@ -1091,7 +1131,7 @@ Alle bronnen die gebruikt zijn bij het maken van dit project, volgens academisch
       - Pester test template generatie
       - Markdown formatting
 
-13. **ChatGPT / Claude**
+13. **ChatGPT / Claude** (indien gebruikt)
     - Gebruikt voor: 
       - PowerShell syntax vragen (bijv. "How to do topological sort in PowerShell?")
       - SQL query optimization advies
@@ -1109,33 +1149,58 @@ Alle bronnen die gebruikt zijn bij het maken van dit project, volgens academisch
       - Les 9: Testing met Pester
     - Gebruikt voor: Basis PowerShell concepten, module structuur
 
+15. **PluralSight Courses** (indien gevolgd)
+    - "PowerShell 7 Fundamentals" door Jonathan Schwartz
+    - "Working with Databases in PowerShell" door Michael Bender
+    - Gebruikt voor: Advanced PowerShell technieken, database best practices
+
 ### Additionele Referenties
 
-15. **CSV RFC 4180 Standard**
+16. **CSV RFC 4180 Standard**
     - https://tools.ietf.org/html/rfc4180
     - Gebruikt voor: CSV format specificaties, encoding keuzes
 
-16. **JSON.org**
+17. **JSON.org**
     - https://www.json.org/
     - Gebruikt voor: Metadata JSON structuur
 
-17. **Semantic Versioning**
+18. **Semantic Versioning**
     - https://semver.org/
     - Gebruikt voor: Module versioning (DatabaseMigration.psd1)
 
-18. **Markdown Guide**
+19. **Markdown Guide**
     - https://www.markdownguide.org/
     - Gebruikt voor: Documentation formatting, README structuur
 
 ### Code Voorbeelden & Inspiratie
 
-19. **dbatools PowerShell Module**
+20. **dbatools PowerShell Module**
     - GitHub: https://github.com/dataplat/dbatools
     - Gebruikt voor: Database migration pattern inspiratie, best practices
 
-20. **ImportExcel Examples**
+21. **ImportExcel Examples**
     - GitHub Examples: https://github.com/dfinke/ImportExcel/tree/master/Examples
     - Gebruikt voor: Excel export formatting, chart generation
+
+### Debugging & Troubleshooting
+
+22. **Microsoft SQL Server Error Messages**
+    - https://docs.microsoft.com/en-us/sql/relational-databases/errors-events/database-engine-events-and-errors
+    - Gebruikt voor: Error handling, troubleshooting SQL errors
+
+23. **PowerShell Gallery**
+    - https://www.powershellgallery.com/
+    - Gebruikt voor: Module discovery, dependency resolution
+
+### Performance & Optimization
+
+24. **SQL Server Performance Tuning**
+    - Microsoft Docs: https://docs.microsoft.com/en-us/sql/relational-databases/performance/performance-center
+    - Gebruikt voor: Batch size optimization, indexing strategies
+
+25. **PowerShell Performance Best Practices**
+    - The PowerShell Best Practices and Style Guide: https://poshcode.gitbook.io/powershell-practice-and-style/
+    - Gebruikt voor: Code optimization, style guidelines
 
 ---
 
@@ -1149,7 +1214,7 @@ In lijn met academische integriteit, hieronder een overzicht van alle AI-gegener
 - Pester test structure templates
 - Standaard try-catch error handling blokken
 
-**ChatGPT/Claude:**
+**ChatGPT/Claude (indien gebruikt):**
 - Vragen gesteld:
   1. "How to implement topological sorting in PowerShell for dependency resolution?"
      - Antwoord gebruikt als basis voor `Get-TableDependencyOrder` functie
@@ -1173,5 +1238,7 @@ In lijn met academische integriteit, hieronder een overzicht van alle AI-gegener
 
 **Auteur:** Zeno Van Neygen  
 **Cursus:** Scripting - Erasmus 2023-2024  
-**Laatste Update:** Januari 2026  
-**Versie:** 3.0.0
+**Laatste Update:** December 2025  
+**Versie:** 2.2.0
+
+---
