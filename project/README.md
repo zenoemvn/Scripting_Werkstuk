@@ -517,10 +517,6 @@ Export-DatabaseSchemaToMarkdown `
     -Database "StackOverflow" `
     -OutputPath ".\Documentation\StackOverflow-Schema.md"
 
-# Of gebruik het demo script:
-.\Demo-SchemaAnalysis.ps1
-```
-
 **De gegenereerde documentatie bevat:**
 - Table of Contents met links naar alle tabellen
 - Volledige kolom definities met datatypes en constraints
@@ -565,7 +561,6 @@ Het project bevat verschillende kant-en-klare scripts voor veelvoorkomende taken
 | `SQLiteRoundtrip.ps1` | Test SQL→SQLite→SQL cyclus | Validatie |
 | `CsvRoundtrip.ps1` | Test CSV export/import cyclus | Validatie |
 | `Export.ps1` | Exporteer SQL Server → CSV + metadata | Database backup |
-| `Demo-SchemaAnalysis.ps1` | Genereer schema documentatie | Documentatie |
 | `Demo-MigrationReport.ps1` | Demo van migratie rapporten | Rapportage |
 | `Quick-Export-WithMetadata.ps1` | Snelle export met schema | Backups |
 | `Quick-Export-Simple.ps1` | Snelle export zonder schema | Data analyse |
@@ -599,20 +594,7 @@ Het project bevat verschillende kant-en-klare scripts voor veelvoorkomende taken
        Invoke-Item
    ```
 
-4. **Test eerst op kleine datasets**
-   ```powershell
-   # Test met een subset van de data voordat je grote databases migreert
-   # Bijvoorbeeld: exporteer alleen 1-2 tabellen eerst
-   Export-SqlTableToCsv -TableName "Users (1)" -OutputPath ".\test.csv"
-   ```
 
-5. **Gebruik batch processing voor grote datasets**
-   ```powershell
-   # Voor datasets > 100k rijen, verhoog batch size voor betere performance
-   Convert-SqlServerToSQLite `
-       -Database "LargeDB" `
-       -BatchSize 10000  # Default is 5000
-   ```
 
 ---
 
@@ -662,24 +644,7 @@ Het account waarmee je PowerShell draait moet de volgende rechten hebben:
 - **Voor imports**: `db_owner` rechten op doel database (om tabellen te kunnen aanmaken)
 - **Voor migraties**: `CREATE DATABASE` rechten om nieuwe databases aan te maken
 
-### Batch Size Configuratie
 
-Voor grote datasets is het belangrijk de juiste batch size te kiezen:
-
-| Dataset Grootte | Aanbevolen BatchSize | Geschatte Tijd (100k rijen) |
-|----------------|---------------------|---------------------------|
-| < 10,000 rijen | 1,000 (default) | ~4 seconden |
-| 10,000 - 100,000 | 5,000 | ~12 seconden |
-| 100,000 - 1M | 10,000 | ~45 seconden |
-| > 1M rijen | 50,000 | ~2 minuten |
-
-```powershell
-# Configureer batch size bij conversie
-Convert-SqlServerToSQLite `
-    -Database "LargeDatabase" `
-    -SQLitePath ".\large.db" `
-    -BatchSize 10000  # Voor grote datasets
-```
 
 ### Configuratie Bestanden (Optioneel)
 
@@ -709,7 +674,7 @@ Het project volgt een modulaire architectuur met scheiding van concerns:
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     User Scripts                        │
-│  (Csvimport, Export, Demo's, Test scripts)             │
+│  (Csvimport, Export, Demo's, Test scripts)              │
 └─────────────────┬───────────────────────────────────────┘
                   │
                   ▼
@@ -717,14 +682,14 @@ Het project volgt een modulaire architectuur met scheiding van concerns:
 │              DatabaseMigration Module                   │
 │                 (Core Functionality)                    │
 ├─────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐   │
-│  │  Migration  │  │ CSV Ops      │  │  Analysis    │   │
-│  │  Functions  │  │ Functions    │  │  Functions   │   │
-│  └─────────────┘  └──────────────┘  └──────────────┘   │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐   │
-│  │ Validation  │  │  Reporting   │  │   Helpers    │   │
-│  │ Functions   │  │  Functions   │  │  Functions   │   │
-│  └─────────────┘  └──────────────┘  └──────────────┘   │
+│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐    │
+│  │  Migration  │  │ CSV Ops      │  │  Analysis    │    │
+│  │  Functions  │  │ Functions    │  │  Functions   │    │
+│  └─────────────┘  └──────────────┘  └──────────────┘    │
+│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐    │
+│  │ Validation  │  │  Reporting   │  │   Helpers    │    │
+│  │ Functions   │  │  Functions   │  │  Functions   │    │
+│  └─────────────┘  └──────────────┘  └──────────────┘    │
 └─────────────────┬───────────────────────────────────────┘
                   │
                   ▼
@@ -1078,138 +1043,54 @@ Alle bronnen die gebruikt zijn bij het maken van dit project, volgens academisch
 
 ### SQL Server Documentatie
 
-5. **Microsoft SQL Server Documentation**
-   - INFORMATION_SCHEMA Views: https://docs.microsoft.com/en-us/sql/relational-databases/system-information-schema-views/
-   - Foreign Keys: https://docs.microsoft.com/en-us/sql/relational-databases/tables/primary-and-foreign-key-constraints
-   - Indexes: https://docs.microsoft.com/en-us/sql/relational-databases/indexes/indexes
-   - Gebruikt voor: Schema extraction queries, constraint syntax
 
-6. **SQLite Documentation**
+5. **SQLite Documentation**
    - SQLite Data Types: https://www.sqlite.org/datatype3.html
    - SQLite Foreign Keys: https://www.sqlite.org/foreignkeys.html
    - Gebruikt voor: Type mappings, SQLite-specifieke syntax
 
-### Algoritmes & Design Patterns
-
-7. **Topological Sorting Algorithm**
-   - Kahn's Algorithm: https://en.wikipedia.org/wiki/Topological_sorting
-   - Gebruikt voor: Table dependency ordering bij foreign keys
-
-8. **Batch Processing Pattern**
-   - Microsoft Patterns & Practices: https://docs.microsoft.com/en-us/previous-versions/msp-n-p/dn589781(v=pandp.10)
-   - Gebruikt voor: Performance optimization bij large dataset imports
 
 ### Testing
 
-9. **Pester Testing Framework**
+8. **Pester Testing Framework**
    - Pester Documentation: https://pester.dev/docs/quick-start
    - GitHub Repository: https://github.com/pester/Pester
    - Gebruikt voor: Unit testing, test structure
 
 ### Stack Overflow & Community
 
-10. **Stack Overflow - PowerShell**
+9. **Stack Overflow - PowerShell**
     - Specific questions referenced:
-      - "PowerShell SQL Bulk Insert": https://stackoverflow.com/questions/2650871/
-      - "PowerShell Export to CSV": https://stackoverflow.com/questions/123456/
-      - "PowerShell Module Export": https://stackoverflow.com/questions/789012/
-    - Gebruikt voor: Best practices, code snippets, troubleshooting
+      - https://stackoverflow.com/questions/19386077/sql-data-project-incorrect-syntax
 
-11. **PowerShell.org Forums**
-    - https://powershell.org/forums/
-    - Gebruikt voor: Community best practices, module design patterns
 
-### AI Assistentie
-
-12. **GitHub Copilot**
+1. **GitHub Copilot**
     - Gebruikt voor: Code completion, boilerplate code generatie
     - Specifieke uses:
-      - Function parameter documentation
+      - Function parameters
       - Try-catch block structuur
       - Pester test template generatie
       - Markdown formatting
 
-13. **ChatGPT / Claude**
+12. **ChatGPT / Claude**
     - Gebruikt voor: 
-      - PowerShell syntax vragen (bijv. "How to do topological sort in PowerShell?")
-      - SQL query optimization advies
+      - PowerShell syntax vragen 
+      - SQL query optimization 
       - Error handling pattern suggesties
       - Documentation review
 
 ### Cursusmateriaal
 
-14. **Scripting Course Materials - Erasmus 2023-2024**
+13. **Scripting Course Materials - Erasmus 2023-2024**
     - PowerPoint presentaties van de lessen
-    - Specifieke topics:
-      - Les 3: PowerShell Modules
-      - Les 5: Database Connectiviteit
-      - Les 7: Error Handling & Logging
-      - Les 9: Testing met Pester
-    - Gebruikt voor: Basis PowerShell concepten, module structuur
 
-### Additionele Referenties
-
-15. **CSV RFC 4180 Standard**
-    - https://tools.ietf.org/html/rfc4180
-    - Gebruikt voor: CSV format specificaties, encoding keuzes
-
-16. **JSON.org**
-    - https://www.json.org/
-    - Gebruikt voor: Metadata JSON structuur
-
-17. **Semantic Versioning**
-    - https://semver.org/
-    - Gebruikt voor: Module versioning (DatabaseMigration.psd1)
-
-18. **Markdown Guide**
-    - https://www.markdownguide.org/
-    - Gebruikt voor: Documentation formatting, README structuur
-
-### Code Voorbeelden & Inspiratie
-
-19. **dbatools PowerShell Module**
-    - GitHub: https://github.com/dataplat/dbatools
-    - Gebruikt voor: Database migration pattern inspiratie, best practices
-
-20. **ImportExcel Examples**
-    - GitHub Examples: https://github.com/dfinke/ImportExcel/tree/master/Examples
-    - Gebruikt voor: Excel export formatting, chart generation
 
 ---
 
-### Volledige Transparantie AI Gebruik
 
-In lijn met academische integriteit, hieronder een overzicht van alle AI-gegenereerde content:
 
-**GitHub Copilot:**
-- Autocomplete van parameter blokken in functies (~30% van boilerplate code)
-- Comment-based help generation (Get-Help documentation blocks)
-- Pester test structure templates
-- Standaard try-catch error handling blokken
-
-**ChatGPT/Claude:**
-- Vragen gesteld:
-  1. "How to implement topological sorting in PowerShell for dependency resolution?"
-     - Antwoord gebruikt als basis voor `Get-TableDependencyOrder` functie
-  2. "Best practice for batch processing in PowerShell with SQL Server?"
-     - Antwoord gebruikt voor batch size optimization strategie
-  3. "How to calculate SHA256 checksum of database table in PowerShell?"
-     - Antwoord gebruikt als basis voor `Get-DataChecksum` implementatie
-  4. "PowerShell module manifest best practices?"
-     - Antwoord gebruikt voor `DatabaseMigration.psd1` structuur
-
-**AI-Gegenereerde Code Percentage:**
-- ~15% direct van AI (boilerplate, templates)
-- ~85% handmatig geschreven met AI-assistentie (autocomplete)
-
-**Verificatie:**
-- Alle AI-suggesties zijn handmatig gereviewed en getest
-- Code is aangepast aan project-specifieke requirements
-- Alle tests zijn handmatig geschreven (Pester test assertions)
-
----
 
 **Auteur:** Zeno Van Neygen  
 **Cursus:** Scripting - Erasmus 2023-2024  
 **Laatste Update:** Januari 2026  
-**Versie:** 3.0.0
+**Versie:** 1.0.0

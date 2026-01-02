@@ -68,7 +68,7 @@ function Get-DataChecksum {
         }
         
         # Convert data to string and calculate hash
-        $dataString = ($data | ConvertTo-Json -Compress)
+        $dataString = ($data | ConvertTo-Json -Compress -Depth 10)
         $hash = [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes($dataString))
         $checksum = [System.BitConverter]::ToString($hash).Replace("-", "")
         
