@@ -1052,19 +1052,23 @@ Alle bronnen die gebruikt zijn bij het maken van dit project, volgens academisch
 
 ### Testing
 
-8. **Pester Testing Framework**
+6. **Pester Testing Framework**
    - Pester Documentation: https://pester.dev/docs/quick-start
    - GitHub Repository: https://github.com/pester/Pester
    - Gebruikt voor: Unit testing, test structure
 
 ### Stack Overflow & Community
 
-9. **Stack Overflow - PowerShell**
+7. **Stack Overflow - PowerShell**
     - Specific questions referenced:
       - https://stackoverflow.com/questions/19386077/sql-data-project-incorrect-syntax
+      - https://stackoverflow.com/questions/17615260/the-certificate-chain-was-issued-by-an-authority-that-is-not-trusted-when-conn
+      - https://stackoverflow.com/questions/24074205/convertto-csv-output-without-quotes
+      - https://stackoverflow.com/questions/1711631/improve-insert-per-second-performance-of-sqlite
+8. **Used dataset**
+    -Dataset: https://archive.org/details/stackexchange
 
-
-1. **GitHub Copilot**
+9. **GitHub Copilot**
     - Gebruikt voor: Code completion, boilerplate code generatie
     - Specifieke uses:
       - Function parameters
@@ -1072,7 +1076,7 @@ Alle bronnen die gebruikt zijn bij het maken van dit project, volgens academisch
       - Pester test template generatie
       - Markdown formatting
 
-12. **ChatGPT / Claude**
+10. **ChatGPT / Claude**
     - Gebruikt voor: 
       - PowerShell syntax vragen 
       - SQL query optimization 
@@ -1081,7 +1085,7 @@ Alle bronnen die gebruikt zijn bij het maken van dit project, volgens academisch
 
 ### Cursusmateriaal
 
-13. **Scripting Course Materials - Erasmus 2023-2024**
+11. **Scripting Cursus **
     - PowerPoint presentaties van de lessen
 
 
