@@ -569,7 +569,6 @@ Het project bevat verschillende kant-en-klare scripts voor veelvoorkomende taken
 | `Demo-MigrationReport.ps1` | Demo van migratie rapporten | Rapportage |
 | `Quick-Export-WithMetadata.ps1` | Snelle export met schema | Backups |
 | `Quick-Export-Simple.ps1` | Snelle export zonder schema | Data analyse |
-| `Quick-Report-Demo.ps1` | Demo van Excel rapporten | Rapportage |
 
 ### Best Practices
 
@@ -806,7 +805,6 @@ project/
 ├── Demo-MigrationReport.ps1              # Demo migratie rapporten
 ├── Quick-Export-WithMetadata.ps1         # Quick export met schema
 ├── Quick-Export-Simple.ps1               # Quick export zonder schema
-├── Quick-Report-Demo.ps1                 # Quick rapport demo
 │
 └── README.md                             # Deze documentatie
 ```

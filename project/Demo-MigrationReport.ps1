@@ -35,19 +35,23 @@ if (-not (Test-Path $reportFolder)) {
 # Option 1: SQL Server -> SQLite Migration Report
 Write-Host "`n=== Demo 1: SQL Server to SQLite Migration ===" -ForegroundColor Yellow
 
-if ($CreateTestData) {
-    Write-Host "Creating test database..." -ForegroundColor Gray
+# Always create/recreate test database for demo purposes
+Write-Host "Creating demo database..." -ForegroundColor Yellow
     
-    # Create test database
-    $createDbQuery = @"
+# Create test database
+$createDbQuery = @"
 IF EXISTS (SELECT name FROM sys.databases WHERE name = 'MigrationDemo')
 BEGIN
     ALTER DATABASE [MigrationDemo] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
     DROP DATABASE [MigrationDemo];
 END
 CREATE DATABASE [MigrationDemo];
-USE [MigrationDemo];
+"@
+    
+Invoke-Sqlcmd -ServerInstance $ServerInstance -TrustServerCertificate -Query $createDbQuery
 
+# Create tables and insert data
+$createTablesQuery = @"
 -- Create test tables
 CREATE TABLE Customers (
     CustomerID INT PRIMARY KEY IDENTITY(1,1),
@@ -76,9 +80,8 @@ INSERT INTO Orders (CustomerID, OrderDate, Total) VALUES
 (3, '2024-03-10', 350.00);
 "@
     
-    Invoke-Sqlcmd -ServerInstance $ServerInstance -TrustServerCertificate -Query $createDbQuery
-    Write-Host " Test database created" -ForegroundColor Green
-}
+Invoke-Sqlcmd -ServerInstance $ServerInstance -Database "MigrationDemo" -TrustServerCertificate -Query $createTablesQuery
+Write-Host " Demo database created with sample data" -ForegroundColor Green
 
 # Perform SQLite migration
 Write-Host "`nPerforming SQL Server -> SQLite migration..." -ForegroundColor Cyan
@@ -87,18 +90,11 @@ $sqliteResult = Convert-SqlServerToSQLite `
     -Database "MigrationDemo" `
     -SQLitePath ".\data\MigrationDemo.db"
 
-# Generate Excel report
-Write-Host "`nGenerating Excel report..." -ForegroundColor Cyan
-$report1 = Export-MigrationReport `
-    -MigrationResults $sqliteResult `
-    -OutputPath "$reportFolder\SqlServer_to_SQLite_Report.xlsx" `
-    -MigrationName "SQL Server to SQLite - MigrationDemo"
-
-if ($report1.Success) {
-    Write-Host " Report saved: $($report1.OutputPath)" -ForegroundColor Green
-    Write-Host "  - Tables: $($report1.TotalTables)" -ForegroundColor Gray
-    Write-Host "  - Success: $($report1.SuccessfulTables)" -ForegroundColor Green
-    Write-Host "  - Failed: $($report1.FailedTables)" -ForegroundColor $(if ($report1.FailedTables -gt 0) { "Red" } else { "Gray" })
+if ($sqliteResult.Success) {
+    Write-Host " Migration successful!" -ForegroundColor Green
+    Write-Host "  Tables: $($sqliteResult.Results.Count)" -ForegroundColor Gray
+    Write-Host "  Total rows: $($sqliteResult.TotalRows)" -ForegroundColor Gray
+    Write-Host "  Report: $($sqliteResult.OutputPath)" -ForegroundColor Cyan
 }
 
 # Option 2: SQLite -> SQL Server Migration Report (with validation)
@@ -109,18 +105,13 @@ $sqlServerResult = Convert-SQLiteToSqlServer `
     -SQLitePath ".\data\MigrationDemo.db" `
     -ServerInstance $ServerInstance `
     -Database "MigrationDemo_Restored" `
-    -BatchSize 1000 `
-    -ValidateChecksum
+    -BatchSize 500
 
-# Generate Excel report
-Write-Host "`nGenerating Excel report..." -ForegroundColor Cyan
-$report2 = Export-MigrationReport `
-    -MigrationResults $sqlServerResult `
-    -OutputPath "$reportFolder\SQLite_to_SqlServer_Report.xlsx" `
-    -MigrationName "SQLite to SQL Server - Restore with Validation"
-
-if ($report2.Success) {
-    Write-Host " Report saved: $($report2.OutputPath)" -ForegroundColor Green
+if ($sqlServerResult.Success) {
+    Write-Host " Migration successful!" -ForegroundColor Green
+    Write-Host "  Tables: $($sqlServerResult.Results.Count)" -ForegroundColor Gray
+    Write-Host "  Total rows: $($sqlServerResult.TotalRows)" -ForegroundColor Gray  
+    Write-Host "  Report: $($sqlServerResult.OutputPath)" -ForegroundColor Cyan
 }
 
 # Option 3: CSV Import Report
@@ -135,36 +126,43 @@ $exportResult = Export-DatabaseSchemaToCsv `
 
 # Then import from CSV
 Write-Host "`nImporting from CSV..." -ForegroundColor Cyan
+
+# Create target database first
+$createTargetDb = @"
+IF EXISTS (SELECT name FROM sys.databases WHERE name = 'MigrationDemo_FromCSV')
+BEGIN
+    ALTER DATABASE [MigrationDemo_FromCSV] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [MigrationDemo_FromCSV];
+END
+CREATE DATABASE [MigrationDemo_FromCSV];
+"@
+Invoke-Sqlcmd -ServerInstance $ServerInstance -TrustServerCertificate -Query $createTargetDb
+
 $importResult = Import-DatabaseFromCsv `
     -ServerInstance $ServerInstance `
     -Database "MigrationDemo_FromCSV" `
     -CsvFolder $exportFolder `
-    -DropTablesIfExist
+    -GenerateReport
 
-# Generate Excel report
-Write-Host "`nGenerating Excel report..." -ForegroundColor Cyan
-$report3 = Export-MigrationReport `
-    -MigrationResults $importResult `
-    -OutputPath "$reportFolder\CSV_Import_Report.xlsx" `
-    -MigrationName "CSV Import - MigrationDemo"
-
-if ($report3.Success) {
-    Write-Host " Report saved: $($report3.OutputPath)" -ForegroundColor Green
-    if ($report3.TotalErrors -gt 0) {
-        Write-Host "   Errors logged: $($report3.TotalErrors)" -ForegroundColor Yellow
-    }
+if ($importResult.Success) {
+    Write-Host " Import successful!" -ForegroundColor Green
+    Write-Host "  Tables: $($importResult.TablesProcessed)" -ForegroundColor Gray
+    Write-Host "  Total rows: $($importResult.TotalRowsImported)" -ForegroundColor Gray
+    Write-Host "  Report: $($importResult.ReportPath)" -ForegroundColor Cyan
+}
+else {
+    Write-Host " Import completed with errors" -ForegroundColor Yellow
+    Write-Host "  Report: $($importResult.ReportPath)" -ForegroundColor Cyan
 }
 
 # Summary
 Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "║              DEMO COMPLETE                     ║" -ForegroundColor Cyan
 Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
-Write-Host "Excel reports created in: $reportFolder" -ForegroundColor Gray
-Write-Host "`nTo view reports, open them in Excel:" -ForegroundColor Yellow
-Write-Host "  - SqlServer_to_SQLite_Report.xlsx" -ForegroundColor White
-Write-Host "  - SQLite_to_SqlServer_Report.xlsx" -ForegroundColor White
-Write-Host "  - CSV_Import_Report.xlsx" -ForegroundColor White
-Write-Host "`nEach report contains:" -ForegroundColor Yellow
+Write-Host "Excel reports created in: $reportFolder" -ForegroundColor Green
+Write-Host "`nAll migrations automatically generated Excel reports with:" -ForegroundColor Yellow
 Write-Host "  • Summary sheet (overview with statistics)" -ForegroundColor Gray
+Write-Host "  • Details sheet (per-table breakdown)" -ForegroundColor Gray
+Write-Host "  • Errors sheet (if any failures occurred)" -ForegroundColor Gray
 Write-Host "  • Details sheet (per-table breakdown)" -ForegroundColor Gray
 Write-Host "  • Errors sheet (if any errors occurred)" -ForegroundColor Gray

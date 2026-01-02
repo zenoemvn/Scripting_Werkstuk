@@ -321,7 +321,7 @@ function Convert-SQLiteToSqlServer {
         [string[]]$Tables = @(),
         
         [Parameter()]
-        [int]$BatchSize = 1000,
+        [int]$BatchSize = 500,  # Kleinere batches voor grote queries
         
         [Parameter()]
         [switch]$ValidateChecksum,
@@ -469,7 +469,8 @@ CREATE DATABASE [$Database];
                                 if ($null -eq $value -or $value -eq '') {
                                     'NULL'
                                 } else {
-                                    $escaped = $value.ToString().Replace("'", "''")
+                                    # Escape voor SQL Server: single quotes dubbelen
+                                    $escaped = $value.ToString() -replace "'", "''"
                                     "N'$escaped'"
                                 }
                             }
@@ -489,16 +490,62 @@ CREATE DATABASE [$Database];
                         }
                         
                         try {
-                            Invoke-Sqlcmd -ServerInstance $ServerInstance -Database $Database -TrustServerCertificate -Query $batchQuery
+                            Invoke-Sqlcmd -ServerInstance $ServerInstance -Database $Database -TrustServerCertificate -Query $batchQuery -DisableVariables -ErrorAction Stop
                             $insertedRows += $batchData.Count
                             
-                            if (($i / $BatchSize) % 10 -eq 0) {
-                                Write-Verbose "  Inserted $insertedRows / $totalDataRows rows..."
+                            if (($i / $BatchSize) % 10 -eq 0 -and $totalDataRows -gt $BatchSize) {
+                                Write-Host "      Inserted $insertedRows / $totalDataRows rows..." -ForegroundColor Gray
                             }
                         }
                         catch {
-                            Write-Verbose "Batch insert failed: $_"
-                            break
+                            Write-Host "      Batch insert failed at row $i : $_" -ForegroundColor Red
+                            Write-Verbose "Failed query length: $($batchQuery.Length) characters"
+                            
+                            # Als de batch te groot is, probeer kleinere batches
+                            if ($batchQuery.Length -gt 50000 -and $batchData.Count -gt 100) {
+                                Write-Host "      Query too large, retrying with smaller batches..." -ForegroundColor Yellow
+                                $smallerBatchSize = [Math]::Max(100, [Math]::Floor($batchData.Count / 2))
+                                
+                                for ($j = 0; $j -lt $batchData.Count; $j += $smallerBatchSize) {
+                                    $smallBatchEnd = [Math]::Min($j + $smallerBatchSize, $batchData.Count)
+                                    $smallBatch = $batchData[$j..($smallBatchEnd - 1)]
+                                    
+                                    $smallInserts = foreach ($row in $smallBatch) {
+                                        $values = foreach ($colName in $columnNames) {
+                                            $value = $row.$colName
+                                            if ($null -eq $value -or $value -eq '') {
+                                                'NULL'
+                                            } else {
+                                                $escaped = $value.ToString().Replace("'", "''")
+                                                "N'$escaped'"
+                                            }
+                                        }
+                                        "INSERT INTO [$tableName] ([$($columnNames -join '],[')])
+                                         VALUES ($($values -join ','));"
+                                    }
+                                    
+                                    $smallQuery = ""
+                                    if ($identityRequired -and $i -eq 0 -and $j -eq 0) {
+                                        $smallQuery += "SET IDENTITY_INSERT [$tableName] ON;`n"
+                                    }
+                                    $smallQuery += $smallInserts -join "`n"
+                                    if ($identityRequired -and ($i + $j + $smallBatchEnd) -ge $totalDataRows) {
+                                        $smallQuery += "`nSET IDENTITY_INSERT [$tableName] OFF;"
+                                    }
+                                    
+                                    try {
+                                        Invoke-Sqlcmd -ServerInstance $ServerInstance -Database $Database -TrustServerCertificate -Query $smallQuery -DisableVariables -ErrorAction Stop
+                                        $insertedRows += $smallBatch.Count
+                                    }
+                                    catch {
+                                        Write-Host "        Small batch also failed: $_" -ForegroundColor Red
+                                        throw
+                                    }
+                                }
+                            }
+                            else {
+                                throw
+                            }
                         }
                     }
 
@@ -1732,6 +1779,12 @@ WHERE t.name = '$tableName'
             [void]$markdown.AppendLine("- **Total Rows:** $totalRows")
             [void]$markdown.AppendLine("- **Total Size:** $([Math]::Round($totalSizeKB / 1024, 2)) MB ($totalSizeKB KB)")
             
+            # Ensure output directory exists
+            $outputDir = Split-Path -Path $OutputPath -Parent
+            if ($outputDir -and -not (Test-Path $outputDir)) {
+                New-Item -Path $outputDir -ItemType Directory -Force | Out-Null
+            }
+            
             # Write to file
             $markdown.ToString() | Set-Content -Path $OutputPath -Encoding UTF8
             
@@ -2811,6 +2864,7 @@ REFERENCES [$($fk.ToTable)]([$($fk.ToColumn)])
                 EndTime = $endTime
                 ExecutionTime = $executionTime
                 ExecutionTimeFormatted = $executionTimeString
+                ReportPath = $null
             }
             
             # Auto-generate report if requested
@@ -2826,6 +2880,8 @@ REFERENCES [$($fk.ToTable)]([$($fk.ToColumn)])
                         -MigrationResults $importResult `
                         -OutputPath $ReportPath `
                         -MigrationName "CSV Import: $Database"
+                    
+                    $importResult.ReportPath = $ReportPath
                 }
                 catch {
                     Write-Warning "Failed to generate migration report: $_"

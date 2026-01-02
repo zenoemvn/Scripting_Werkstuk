@@ -34,6 +34,11 @@ $exportResult = Export-DatabaseSchemaToCsv `
 
 Write-Host " Export completed" -ForegroundColor Green
 
+# Toon rapportlocatie als die bestaat  
+if ($exportResult.OutputPath) {
+    Write-Host " Export report: $($exportResult.OutputPath)" -ForegroundColor Cyan
+}
+
 # STAP 2: Inspect metadata
 Write-Host "`n[STEP 2] Inspecting metadata..." -ForegroundColor Yellow
 
@@ -80,9 +85,15 @@ Write-Host "`n[STEP 4] Importing CSV to $TargetDatabase (using metadata)..." -Fo
 $importResult = Import-DatabaseFromCsv `
     -ServerInstance $ServerInstance `
     -Database $TargetDatabase `
-    -CsvFolder $ExportFolder
+    -CsvFolder $ExportFolder `
+    -GenerateReport
 
 Write-Host " Import completed" -ForegroundColor Green
+
+# Toon rapportlocatie als die bestaat
+if ($importResult.ReportPath) {
+    Write-Host " Import report: $($importResult.ReportPath)" -ForegroundColor Cyan
+}
 
 # STAP 5: Verify schema in restored database
 Write-Host "`n[STEP 5] Verifying restored schema..." -ForegroundColor Yellow
