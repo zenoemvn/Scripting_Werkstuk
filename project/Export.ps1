@@ -70,6 +70,63 @@ ORDER BY t.name
     if ($result.Success) {
         Write-Host "`n Export with metadata completed successfully!" -ForegroundColor Green
         Write-Host "  Schema metadata saved to: schema-metadata.json" -ForegroundColor Gray
+        
+        # GENEREER RAPPORT
+        Write-Host "`n[REPORT] Generating Excel Report..." -ForegroundColor Yellow
+        
+        $endTime = Get-Date
+        $executionTime = ($endTime - $startTime)
+        
+        if ($executionTime.TotalSeconds -lt 1) {
+            $executionTimeString = "{0:0.000} seconds" -f $executionTime.TotalSeconds
+        } elseif ($executionTime.TotalMinutes -lt 1) {
+            $executionTimeString = "{0:0.00} seconds" -f $executionTime.TotalSeconds
+        } else {
+            $executionTimeString = "{0:hh\:mm\:ss}" -f $executionTime
+        }
+        
+        Write-Host "Execution time: $executionTimeString" -ForegroundColor Gray
+        
+        $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+        $ReportPath = ".\Reports\Export_${Database}_${timestamp}.xlsx"
+        
+        # Ensure Reports folder exists
+        if (-not (Test-Path ".\Reports")) {
+            New-Item -Path ".\Reports" -ItemType Directory -Force | Out-Null
+        }
+        
+        # Create migration-style result object
+        $exportResult = [PSCustomObject]@{
+            Success = $result.Success
+            Results = $result.Tables | ForEach-Object {
+                [PSCustomObject]@{
+                    TableName = $_.TableName
+                    Success = $true
+                    RowsMigrated = $_.RowCount
+                    Error = $null
+                }
+            }
+            TotalRows = ($result.Tables | Measure-Object -Property RowCount -Sum).Sum
+            TablesProcessed = $result.Tables.Count
+            PrimaryKeysAdded = ($result.Tables | Where-Object { $_.PrimaryKey } | Measure-Object).Count
+            ForeignKeysAdded = ($result.Tables | ForEach-Object { $_.ForeignKeys.Count } | Measure-Object -Sum).Sum
+            StartTime = $startTime
+            EndTime = $endTime
+            ExecutionTime = $executionTime
+            ExecutionTimeFormatted = $executionTimeString
+        }
+        
+        try {
+            Export-MigrationReport `
+                -MigrationResults $exportResult `
+                -OutputPath $ReportPath `
+                -MigrationName "CSV Export with Metadata: $Database"
+            
+            Write-Host "   Report generated: $ReportPath" -ForegroundColor Green
+        }
+        catch {
+            Write-Warning "Failed to generate report: $_"
+        }
     }
     
     exit

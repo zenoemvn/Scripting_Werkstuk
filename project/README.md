@@ -271,7 +271,118 @@ WHERE _Text LIKE '%printing%';
 
 > **⚠️ Let op:** Zorg ervoor dat je de [Dataset Importeren](#-dataset-importeren) stappen hebt gevolgd!
 
-### 1. Database Conversie: SQL Server → SQLite
+### Twee Manieren om de Toolkit te Gebruiken
+
+Er zijn **twee manieren** om de toolkit te gebruiken:
+
+#### 1. **Standalone Scripts** (Aanbevolen voor beginners)
+```powershell
+# Direct uitvoeren, geen module import nodig
+.\Export.ps1 -Database "StackOverflow" -ServerInstance "localhost\SQLEXPRESS" -OutputFolder ".\Export"
+.\Csvimport.ps1 -CsvFolder ".\Import" -DatabaseName "StackOverflow"
+```
+✅ **Voordelen:**
+- Eenvoudig te gebruiken
+- Automatische module import
+- Gebruiksvriendelijke parameter namen
+- Altijd Excel rapporten
+
+#### 2. **Module Functies** (Voor gevorderde gebruikers)
+```powershell
+# Eerst module importeren
+Import-Module .\Modules\DatabaseMigration.psm1 -Force
+
+# Dan functies gebruiken
+Export-DatabaseSchemaToCsv -Database "StackOverflow" -ServerInstance "localhost\SQLEXPRESS" -OutputFolder ".\Export"
+Convert-SqlServerToSQLite -Database "StackOverflow" -SQLitePath ".\data\db.sqlite"
+```
+✅ **Voordelen:**
+- Meer controle over parameters
+- Toegang tot alle 13 module functies
+- Beter voor automation/scripting
+
+> **💡 Tip:** In deze README gebruiken we voornamelijk de **standalone scripts** omdat die het makkelijkst zijn voor beginners.
+
+---
+
+### CSV Operaties
+
+#### 1. Database Exporteren naar CSV (met Metadata)
+
+Exporteer de StackOverflow database naar CSV formaat met volledige schema metadata:
+
+```powershell
+# Exporteer met schema metadata (behoudt PKs, FKs, constraints)
+.\Export.ps1 `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -OutputFolder ".\Export\StackOverflow_Backup" `
+    -SaveSchemaMetadata
+
+# Dit script importeert automatisch de module en genereert een Excel rapport
+```
+
+**Dit creëert:**
+```
+.\Export\StackOverflow_Backup\
+├─ Badges (2).csv
+├─ Comments (1).csv
+├─ PostHistory (1).csv
+├─ PostLinks (1).csv
+├─ Posts (1).csv
+├─ Tags (1).csv
+├─ Users (1).csv
+├─ Votes (1).csv
+└─ schema-metadata.json  ← Bevat PKs, FKs, datatypes, constraints
+```
+
+De `schema-metadata.json` bevat alle informatie om de database exact te reconstrueren:
+- Primary Keys
+- Foreign Keys met referenties
+- Datatypes en lengtes
+- Unique constraints
+- Check constraints
+- Indexes
+
+#### 2. CSV Roundtrip Test
+
+Test de CSV export/import cyclus:
+
+```powershell
+# Voer het CSV roundtrip script uit
+.\CsvRoundtrip.ps1
+
+# Dit script:
+# 1. Exporteert StackOverflow database naar CSV + metadata
+# 2. Importeert CSV bestanden naar nieuwe database 'StackOverflow_Copy'
+# 3. Vergelijkt beide databases (structuur en data)
+# 4. Valideert alle constraints (PKs, FKs)
+```
+
+#### 3. Specifieke Tabellen Exporteren naar CSV
+
+Voor enkele tabellen gebruik je de module functies:
+
+```powershell
+# Importeer module
+Import-Module .\Modules\DatabaseMigration.psm1 -Force
+
+# Exporteer alleen de Users tabel
+Export-SqlTableToCsv `
+    -ServerInstance "localhost\SQLEXPRESS" `
+    -Database "StackOverflow" `
+    -TableName "Users (1)" `
+    -OutputPath ".\Export\Users.csv"
+
+# ⚠️ Let op: Enkele tabel exports genereren GEEN rapport
+# Gebruik .\Export.ps1 -SaveSchemaMetadata voor volledige exports met rapporten
+```
+
+---
+
+### SQLite Conversies
+
+Voor SQLite conversies gebruik je de module functies:
 
 Nu je de StackOverflow database in SQL Server hebt, kun je deze converteren naar SQLite:
 
@@ -313,7 +424,7 @@ Converting StackOverflow from SQL Server to SQLite...
 Report saved to: .\Reports\Migration_StackOverflow_20260102_143022.xlsx
 ```
 
-### 2. Verifieer de SQLite Database
+#### 5. Verifieer de SQLite Database
 
 ```powershell
 # Bekijk alle tabellen in de SQLite database
@@ -338,7 +449,7 @@ $tables | ForEach-Object {
 # ... etc.
 ```
 
-### 3. Database Conversie: SQLite → SQL Server (Roundtrip Test)
+#### 6. Database Conversie: SQLite → SQL Server (Roundtrip Test)
 
 Je kunt de SQLite database weer terugconverteren naar SQL Server om de migratie te valideren:
 
@@ -370,7 +481,7 @@ Converting StackOverflow.db from SQLite to SQL Server...
 Report saved to: .\Reports\Migration_StackOverflow_FromSQLite_20260102_143545.xlsx
 ```
 
-### 4. Complete Roundtrip Test (Automatisch)
+#### 7. Complete Roundtrip Test (Automatisch)
 
 Test de volledige cyclus: SQL Server → SQLite → SQL Server:
 
@@ -385,7 +496,17 @@ Test de volledige cyclus: SQL Server → SQLite → SQL Server:
 # 4. Genereert uitgebreid validatie rapport
 ```
 
-### 5. Schema Documentatie Genereren
+---
+
+### Documentatie & Rapportage
+
+#### 8. Schema Documentatie Genereren
+
+---
+
+### Documentatie & Rapportage
+
+#### 8. Schema Documentatie Genereren
 
 Genereer professionele Markdown documentatie van de database structuur:
 
@@ -408,63 +529,7 @@ Export-DatabaseSchemaToMarkdown `
 - Row counts per tabel
 - Relationele diagram beschrijvingen
 
-### 6. Database Exporteren naar CSV (met Metadata)
-
-Exporteer de StackOverflow database terug naar CSV formaat met volledige schema metadata:
-
-```powershell
-# Exporteer met schema metadata (aanbevolen voor backups)
-.\Export.ps1 `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "StackOverflow" `
-    -OutputFolder ".\Export\StackOverflow_Backup" `
-    -SaveSchemaMetadata
-
-# Of gebruik de module functie:
-Export-DatabaseSchemaToCsv `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "StackOverflow" `
-    -OutputFolder ".\Export\StackOverflow_Backup"
-```
-
-**Dit creëert:**
-```
-.\Export\StackOverflow_Backup\
-├─ Badges (2).csv
-├─ Comments (1).csv
-├─ PostHistory (1).csv
-├─ PostLinks (1).csv
-├─ Posts (1).csv
-├─ Tags (1).csv
-├─ Users (1).csv
-├─ Votes (1).csv
-└─ schema-metadata.json  ← Bevat PKs, FKs, datatypes, constraints
-```
-
-De `schema-metadata.json` bevat alle informatie om de database exact te reconstrueren:
-- Primary Keys
-- Foreign Keys met referenties
-- Datatypes en lengtes
-- Unique constraints
-- Check constraints
-- Indexes
-
-### 7. CSV Roundtrip Test
-
-Test de CSV export/import cyclus:
-
-```powershell
-# Voer het CSV roundtrip script uit
-.\CsvRoundtrip.ps1
-
-# Dit script:
-# 1. Exporteert StackOverflow database naar CSV + metadata
-# 2. Importeert CSV bestanden naar nieuwe database 'StackOverflow_Copy'
-# 3. Vergelijkt beide databases (structuur en data)
-# 4. Valideert alle constraints (PKs, FKs)
-```
-
-### 8. Migratie Rapporten Bekijken
+#### 9. Migratie Rapporten Bekijken
 
 Na elke conversie wordt automatisch een Excel rapport gegenereerd:
 
@@ -486,32 +551,7 @@ Get-ChildItem .\Reports\ -Filter "*.xlsx" |
 - **Error Log**: Eventuele errors of warnings
 - **Statistics**: Grafieken van row counts en performance
 
-### 9. Specifieke Tabellen Exporteren
-
-Exporteer individuele tabellen voor analyse:
-
-```powershell
-# Exporteer alleen de Users tabel
-Export-SqlTableToCsv `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "StackOverflow" `
-    -TableName "Users (1)" `
-    -OutputPath ".\Export\Users.csv"
-
-# Exporteer Posts met aangepaste kolomnamen (voor Excel analyse)
-Export-SqlTableToCsv `
-    -ServerInstance "localhost\SQLEXPRESS" `
-    -Database "StackOverflow" `
-    -TableName "Posts (1)" `
-    -OutputPath ".\Export\Posts_Analysis.csv" `
-    -HeaderMapping @{
-        '_Id' = 'PostID'
-        '_Title' = 'Titel'
-        '_Body' = 'Inhoud'
-        '_Score' = 'Score'
-        '_ViewCount' = 'Weergaven'
-    }
-```
+---
 
 ### Quick Reference Scripts
 
